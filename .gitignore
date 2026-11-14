@@ -1,0 +1,11 @@
+# Entorno y artefactos generados
+.venv/
+salida/
+__pycache__/
+
+# Notas de trabajo locales (ver DECISIONES.md D-02)
+PLAN.md
+
+# Archivos del sistema y del editor
+.DS_Store
+.vscode/
