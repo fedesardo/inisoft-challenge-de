@@ -124,3 +124,10 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Qué descarté y por qué:** usar los valores tal como vienen (el criterio vería al equipo como sano justo antes de fallar, como pasó con EQ-209); excluir a esos equipos del criterio (se pierde justo el aviso de que el sensor no sirve).
 - **Consecuencia:** un sensor ciego deja de ser un falso "sano" y pasa a ser un hallazgo accionable. **Pendientes que se cierran en el paso del criterio y se registran aquí:** (1) la regla concreta de detección (por ejemplo, caída brusca y sostenida a un nivel cercano a cero, o valor idéntico durante varios días); (2) si el valor congelado de EQ-219 entra en la misma regla; (3) cómo cabe el aviso en la lista de máximo 5 equipos (D-04): dentro de los 5 o como sección aparte.
 - **Evidencia:** `docs/perfilado.md`, H-09 y H-10 (gráfico `docs/graficos/h09-trayectorias.png`). Pregunta abierta al cliente: si el sensor VX-200 se calibró y en qué escala mide.
+
+## D-17 · OT: normalizar siempre los IDs de equipo; descartar y reportar las que sigan sin cruzar
+- **Contexto:** de las 86 OT, 69 cruzan con el maestro con el ID tal cual y 17 no, por IDs sucios (`EQ103`, `eq-117`, ` EQ-101` con espacio inicial). Normalizando (recortar espacios, pasar a mayúsculas, insertar el guion) cruzan las 86: hoy no queda ningún ID huérfano.
+- **Qué decidí:** dos reglas en orden. (1) Normalizar siempre el ID del equipo en las OT. (2) Si tras normalizar queda algún ID que no existe en el maestro, descartar esa OT y reportar cuántas y cuáles fueron.
+- **Qué descarté y por qué:** descartar en silencio (pierde fallas sin avisar); detener el pipeline si hay huérfanos (un ID mal escrito en una OT no justifica frenar todo).
+- **Consecuencia:** hoy el segundo punto no se activa (0 huérfanos); queda como regla para drops futuros. Riesgo: si la OT descartada era una falla, desaparece del backtest, por eso el reporte es obligatorio.
+- **Evidencia:** `docs/perfilado.md`, H-13 (69 de 86 cruzan crudo; 86 de 86 normalizado).

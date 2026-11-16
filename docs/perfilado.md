@@ -609,7 +609,10 @@ SELECT equipo, count(*) FROM ot WHERE equipo NOT SIMILAR TO 'EQ-[0-9]+' GROUP BY
 
 **Qué significa:** los IDs son sucios pero recuperables, y una regla simple alcanza. Si no se normalizaran, se perderían 17 OT (el 20 %) y las fallas de esos equipos desaparecerían en silencio.
 
-**Decisión a tomar:** cómo tratar IDs que no cruzan ni siquiera normalizados (hoy son 0, pero el mes que viene puede haber).
+**Decisión a tomar:** son dos decisiones separadas, en este orden.
+
+1. **Normalizar los IDs** (recortar espacios, pasar a mayúsculas, insertar el guion). No es una opción: sin esto se pierden 17 OT. Con ella cruzan 86 de 86.
+2. **Qué hacer con los IDs que, ya normalizados, siguen sin existir en el maestro** (hoy son 0, pero el mes que viene puede haber). Las opciones de la tabla se refieren solo a este segundo punto:
 
 | Opción | Pro | Contra |
 |---|---|---|
@@ -617,7 +620,7 @@ SELECT equipo, count(*) FROM ot WHERE equipo NOT SIMILAR TO 'EQ-[0-9]+' GROUP BY
 | B. Descartarlos y **reportar** cuántos y cuáles | Visible | No los rescata |
 | C. Detener el pipeline si hay huérfanos | Máxima seguridad | Un ID mal escrito frena todo |
 
-**Recomendación: B.** Normalizar siempre y reportar los huérfanos en el informe de perfilado (R3 pide "OT sin cruce"). Frenar el pipeline por un ID mal escrito es desproporcionado.
+**Decisión (D-17):** (1) normalizar siempre los IDs de las OT; (2) si tras normalizar queda algún ID sin cruzar, descartar esa OT y reportar cuántas y cuáles (opción B). Frenar el pipeline por un ID mal escrito es desproporcionado. Riesgo conocido: si una OT descartada era una falla, desaparece del backtest; por eso el reporte es obligatorio. R3 pide "OT sin cruce".
 
 ## H-14 · Tipos de OT
 
@@ -737,7 +740,7 @@ Nada de esto está decidido; son mis recomendaciones para que las revises. Al co
 | H-09 | Tolerancia de R4(c) | **Decidido (D-15):** ±0,5 % sobre la mediana de los cambios entre equipos; reportar los equipos que cambian más |
 | H-10 | Sensores sospechosos | **Decidido (D-16):** detectarlos y tratarlos como motivo de revisión propio (falta definir la regla y su lugar en la lista de 5) |
 | H-12 | Umbral del fabricante | Usarlo **solo como referencia ingenua** en el backtest |
-| H-13 | IDs de OT que no cruzan | Normalizar siempre y **reportar** los huérfanos |
+| H-13 | IDs de OT que no cruzan | **Decidido (D-17):** normalizar siempre; descartar y reportar los que sigan sin cruzar |
 | H-14 | Tipos de OT | Mapear sinónimos, **sin** usar el tipo para decidir fallas |
 | H-15 | Cortes del backtest | Solo con 7 días de futuro; la lista final se calcula igual, **sin evaluación** del último tramo |
 | H-16 | Qué es una falla | **Regla sobre la descripción** con frases específicas, revisada cada mes |
