@@ -6,8 +6,8 @@
 
 **Gráficos:** las imágenes de `docs/graficos/` (H-04, H-07, H-08, H-09) se regeneran con `uv run python docs/graficos/generar_graficos.py`. El script lee `drop/` en solo lectura y necesita Google Chrome instalado (variable `CHROME_BIN` si no está en la ruta de macOS por defecto).
 
-**Salidas de las consultas:** debajo de cada consulta hay un bloque `-- Salida` con el resultado **literal**, pegado por una herramienta y no escrito a mano. La sección "Resultado" de cada hallazgo es el resumen en palabras; la salida es lo que devuelve DuckDB. Para hacer tu propio doble check:
-- Ejecutar una consulta cualquiera contra las mismas vistas: `uv run python docs/herramientas/perfilado.py ejecutar "SELECT count(*) FROM raw"` (vistas disponibles: `raw`, `eq`, `ot`, `l`, `c`). Si el resultado coincide con el bloque `-- Salida` del documento, la consulta es reproducible.
+**Salidas de las consultas:** debajo de cada consulta hay una tabla **Salida** con el resultado real, pegada por una herramienta y no escrita a mano. Las salidas de más de 12 filas están dentro de un desplegable: hacé clic en el título para verlas. Los números se muestran sin ceros de sobra (por ejemplo `7` y no `7.0`) y los vacíos como `NULL`. La sección "Resultado" de cada hallazgo es el resumen en palabras; la salida es lo que devuelve DuckDB. Para hacer tu propio doble check:
+- Ejecutar una consulta cualquiera contra las mismas vistas: `uv run python docs/herramientas/perfilado.py ejecutar "SELECT count(*) FROM raw"` (vistas disponibles: `raw`, `eq`, `ot`, `l`, `c`). Si el resultado coincide con la tabla Salida del documento, la consulta es reproducible.
 - Regenerar todas las salidas: `uv run python docs/herramientas/perfilado.py insertar`. Es repetible (tres corridas seguidas dan el mismo documento); si una salida cambiara, el documento quedaría desactualizado y se vería en `git diff`.
 - Las consultas de "Contraste" que aparecen escritas dentro del texto (entre comillas invertidas) no se insertan solas; se pegan en el comando `ejecutar`.
 
@@ -117,12 +117,14 @@ SELECT (equipment_id IS NOT NULL) AS viejo, count(DISTINCT filename) archivos, c
 FROM raw GROUP BY 1;
 ```
 
-```text
--- Salida
- viejo  archivos  filas      desde      hasta
-  True        10  38597 2026-02-01 2026-02-10
- False        20  76468 2026-02-11 2026-03-02
-```
+<!-- salida:inicio -->
+**Salida** (2 filas)
+
+| viejo | archivos | filas | desde | hasta |
+|---|---|---|---|---|
+| True | 10 | 38597 | 2026-02-01 | 2026-02-10 |
+| False | 20 | 76468 | 2026-02-11 | 2026-03-02 |
+<!-- salida:fin -->
 
 **Cómo leer la consulta:**
 - `(equipment_id IS NOT NULL) AS viejo` es la pregunta clave. Es verdadero cuando la fila **tiene** la columna `equipment_id`. Esa columna **solo existe en el formato viejo** (el nuevo usa `asset_id`), y gracias a `union_by_name` queda en NULL para todas las filas del formato nuevo. Entonces esta expresión funciona como un **detector de formato**: `true` = formato viejo, `false` = nuevo. Tu intuición era correcta: se usa justamente porque el formato viejo trae `equipment_id` y el nuevo no.
@@ -163,40 +165,45 @@ SELECT regexp_extract(filename,'(\d{4}-\d\d-\d\d)',1) dia, count(*) filas,
 FROM l GROUP BY 1 ORDER BY 1;
 ```
 
-```text
--- Salida
-       dia  filas  equipos
-2026-02-01   3863       40
-2026-02-02   3863       40
-2026-02-03   3863       40
-2026-02-04   3863       40
-2026-02-05   3863       40
-2026-02-06   3863       40
-2026-02-07   3863       40
-2026-02-08   3863       40
-2026-02-09   3830       40
-2026-02-10   3863       40
-2026-02-11   3840       40
-2026-02-12   3840       40
-2026-02-13   3840       40
-2026-02-14   3840       40
-2026-02-15   3840       40
-2026-02-16   3812       40
-2026-02-17   3836       40
-2026-02-18   3840       40
-2026-02-19   3808       40
-2026-02-20   3864       41
-2026-02-21   3864       41
-2026-02-22   3808       40
-2026-02-23   3840       40
-2026-02-24   3840       40
-2026-02-25   3840       40
-2026-02-26   3840       40
-2026-02-27   3808       40
-2026-02-28   3780       40
-2026-03-01   3744       39
-2026-03-02   3744       39
-```
+<!-- salida:inicio -->
+<details>
+<summary><b>Salida</b> (30 filas, clic para ver)</summary>
+
+| dia | filas | equipos |
+|---|---|---|
+| 2026-02-01 | 3863 | 40 |
+| 2026-02-02 | 3863 | 40 |
+| 2026-02-03 | 3863 | 40 |
+| 2026-02-04 | 3863 | 40 |
+| 2026-02-05 | 3863 | 40 |
+| 2026-02-06 | 3863 | 40 |
+| 2026-02-07 | 3863 | 40 |
+| 2026-02-08 | 3863 | 40 |
+| 2026-02-09 | 3830 | 40 |
+| 2026-02-10 | 3863 | 40 |
+| 2026-02-11 | 3840 | 40 |
+| 2026-02-12 | 3840 | 40 |
+| 2026-02-13 | 3840 | 40 |
+| 2026-02-14 | 3840 | 40 |
+| 2026-02-15 | 3840 | 40 |
+| 2026-02-16 | 3812 | 40 |
+| 2026-02-17 | 3836 | 40 |
+| 2026-02-18 | 3840 | 40 |
+| 2026-02-19 | 3808 | 40 |
+| 2026-02-20 | 3864 | 41 |
+| 2026-02-21 | 3864 | 41 |
+| 2026-02-22 | 3808 | 40 |
+| 2026-02-23 | 3840 | 40 |
+| 2026-02-24 | 3840 | 40 |
+| 2026-02-25 | 3840 | 40 |
+| 2026-02-26 | 3840 | 40 |
+| 2026-02-27 | 3808 | 40 |
+| 2026-02-28 | 3780 | 40 |
+| 2026-03-01 | 3744 | 39 |
+| 2026-03-02 | 3744 | 39 |
+
+</details>
+<!-- salida:fin -->
 y, para confirmar que cada timestamp cae en el día de su archivo y en la grilla de 15 minutos:
 ```sql
 SELECT (CAST(ts_txt AS TIMESTAMP)::date::varchar <> regexp_extract(filename,'(\d{4}-\d\d-\d\d)',1)) fuera_de_su_dia,
@@ -204,17 +211,21 @@ SELECT (CAST(ts_txt AS TIMESTAMP)::date::varchar <> regexp_extract(filename,'(\d
 SELECT viejo, sum((minute(CAST(ts_txt AS TIMESTAMP))%15<>0 OR second(CAST(ts_txt AS TIMESTAMP))<>0)::int) no_multiplo_15 FROM l GROUP BY 1;
 ```
 
-```text
--- Salida 1 de 2
- fuera_de_su_dia  viejo  count_star()
-           False   True         38597
-           False  False         76468
+<!-- salida:inicio -->
+**Salida 1 de 2** (2 filas)
 
--- Salida 2 de 2
- viejo  no_multiplo_15
-  True             0.0
- False             0.0
-```
+| fuera_de_su_dia | viejo | count_star() |
+|---|---|---|
+| False | True | 38597 |
+| False | False | 76468 |
+
+**Salida 2 de 2** (2 filas)
+
+| viejo | no_multiplo_15 |
+|---|---|
+| True | 0 |
+| False | 0 |
+<!-- salida:fin -->
 
 **Cómo leer la consulta:**
 - Primera: igual que H-01 pero agrupando por día. `count(DISTINCT eqid)` cuenta cuántos equipos distintos reportaron ese día.
@@ -247,16 +258,20 @@ WITH d AS (SELECT eqid, ts_txt, count(*) c, count(DISTINCT vib_txt) dv, count(DI
 SELECT c filas_por_clave, count(*) claves, sum((dv>1)::int) vib_distinta, sum((dt>1)::int) temp_distinta FROM d GROUP BY 1;
 ```
 
-```text
--- Salida 1 de 2
- viejo  filas  duplicados_clave  duplicados_exactos
-  True  38597               229                   5
- False  76468                 0                   0
+<!-- salida:inicio -->
+**Salida 1 de 2** (2 filas)
 
--- Salida 2 de 2
- filas_por_clave  claves  vib_distinta  temp_distinta
-               2     229         224.0            0.0
-```
+| viejo | filas | duplicados_clave | duplicados_exactos |
+|---|---|---|---|
+| True | 38597 | 229 | 5 |
+| False | 76468 | 0 | 0 |
+
+**Salida 2 de 2** (1 fila)
+
+| filas_por_clave | claves | vib_distinta | temp_distinta |
+|---|---|---|---|
+| 2 | 229 | 224 | 0 |
+<!-- salida:fin -->
 
 **Cómo leer la consulta:**
 - Primera: `count(*)` es el total de filas; `count(DISTINCT (eqid, ts_txt))` es la cantidad de **claves únicas** (equipo + momento). La resta es cuántas filas sobran por repetir clave. Lo mismo para `duplicados_exactos`, pero la clave incluye también los valores (vibración y temperatura): si dos filas son idénticas en todo, cuentan como un solo valor distinto.
@@ -299,22 +314,28 @@ SELECT viejo, sum((TRY_CAST(vib_txt AS DOUBLE) IS NULL AND vib_txt IS NOT NULL):
 SELECT viejo, length(ts_txt) largo, count(*) FROM l GROUP BY 1,2;
 ```
 
-```text
--- Salida 1 de 3
- viejo     n  n_eq  n_ts  n_vib  n_temp
-  True 38597     0     0      0       0
- False 76468     0     0      0       0
+<!-- salida:inicio -->
+**Salida 1 de 3** (2 filas)
 
--- Salida 2 de 3
- viejo  vib_no_num  temp_no_num  ts_no_parsea
-  True         0.0          0.0           0.0
- False         0.0          0.0           0.0
+| viejo | n | n_eq | n_ts | n_vib | n_temp |
+|---|---|---|---|---|---|
+| True | 38597 | 0 | 0 | 0 | 0 |
+| False | 76468 | 0 | 0 | 0 | 0 |
 
--- Salida 3 de 3
- viejo  largo  count_star()
-  True     19         38597
- False     19         76468
-```
+**Salida 2 de 3** (2 filas)
+
+| viejo | vib_no_num | temp_no_num | ts_no_parsea |
+|---|---|---|---|
+| True | 0 | 0 | 0 |
+| False | 0 | 0 | 0 |
+
+**Salida 3 de 3** (2 filas)
+
+| viejo | largo | count_star() |
+|---|---|---|
+| True | 19 | 38597 |
+| False | 19 | 76468 |
+<!-- salida:fin -->
 
 **Cómo leer la consulta:**
 - Primera: `count(columna)` cuenta solo los valores **no nulos**, mientras que `count(*)` cuenta todas las filas. La resta da la cantidad de nulos de cada columna.
@@ -338,19 +359,25 @@ SELECT eqid, min(ts_txt) desde, max(ts_txt) hasta, count(*) n FROM l WHERE eqid=
 SELECT count(*) filas_C_sobre_100, count(DISTINCT eqid) FROM l WHERE unidad_temp='C' AND TRY_CAST(temp_txt AS DOUBLE)>100;
 ```
 
-```text
--- Salida 1 de 3
-      eqid  n
-EQ-TEST-01 48
+<!-- salida:inicio -->
+**Salida 1 de 3** (1 fila)
 
--- Salida 2 de 3
-      eqid               desde               hasta  n
-EQ-TEST-01 2026-02-20T00:00:00 2026-02-21T23:00:00 48
+| eqid | n |
+|---|---|
+| EQ-TEST-01 | 48 |
 
--- Salida 3 de 3
- filas_C_sobre_100  count(DISTINCT eqid)
-                15                     1
-```
+**Salida 2 de 3** (1 fila)
+
+| eqid | desde | hasta | n |
+|---|---|---|---|
+| EQ-TEST-01 | 2026-02-20T00:00:00 | 2026-02-21T23:00:00 | 48 |
+
+**Salida 3 de 3** (1 fila)
+
+| filas_C_sobre_100 | count(DISTINCT eqid) |
+|---|---|
+| 15 | 1 |
+<!-- salida:fin -->
 
 **Cómo leer la consulta:**
 - `eqid NOT IN (SELECT equipment_id FROM eq)` busca IDs de lecturas que no figuran en el maestro (`eq`). Es el cruce clásico para encontrar "huérfanos".
@@ -391,22 +418,28 @@ FROM l GROUP BY 1,2 ORDER BY 1,2;
 SELECT count(*) FROM l WHERE unidad_temp='F' AND (TRY_CAST(temp_txt AS DOUBLE)-32)*5/9 > 100;
 ```
 
-```text
--- Salida 1 de 3
-unidad_temp  equipos  filas
-          C       41  65068
-          F       40  11400
+<!-- salida:inicio -->
+**Salida 1 de 3** (2 filas)
 
--- Salida 2 de 3
- viejo unidad_temp     n  tmin  tmed  tmax  vmin  vmed  vmax
- False           C 65068   3.7  65.9 149.7  0.07  2.63 32.76
- False           F 11400 126.7 149.3 204.4  0.07  2.64 10.49
-  True         NaN 38597  52.6  64.6  79.4  1.50  2.55 24.74
+| unidad_temp | equipos | filas |
+|---|---|---|
+| C | 41 | 65068 |
+| F | 40 | 11400 |
 
--- Salida 3 de 3
- count_star()
-            0
-```
+**Salida 2 de 3** (3 filas)
+
+| viejo | unidad_temp | n | tmin | tmed | tmax | vmin | vmed | vmax |
+|---|---|---|---|---|---|---|---|---|
+| False | C | 65068 | 3.7 | 65.9 | 149.7 | 0.07 | 2.63 | 32.76 |
+| False | F | 11400 | 126.7 | 149.3 | 204.4 | 0.07 | 2.64 | 10.49 |
+| True | NULL | 38597 | 52.6 | 64.6 | 79.4 | 1.5 | 2.55 | 24.74 |
+
+**Salida 3 de 3** (1 fila)
+
+| count_star() |
+|---|
+| 0 |
+<!-- salida:fin -->
 
 **Cómo leer la consulta:**
 - Primera: cuenta equipos y filas por cada valor de `unidad_temp`. `WHERE unidad_temp IS NOT NULL` deja afuera el sistema viejo (que no tiene esa columna).
@@ -458,34 +491,39 @@ SELECT hour(ts) h, round(avg(temp_c) FILTER (WHERE viejo),1) viejo_temp,
 FROM c GROUP BY 1 ORDER BY 1;
 ```
 
-```text
--- Salida
- h  viejo_temp  nuevo_temp  viejo_vib  nuevo_vib
- 0        62.9        65.2       2.58       2.55
- 1        62.5        64.5       2.58       2.55
- 2        62.2        63.8       2.58       2.55
- 3        62.3        63.2       2.59       2.56
- 4        62.4        62.8       2.58       2.55
- 5        62.8        62.6       2.59       2.56
- 6        63.3        62.6       2.58       2.55
- 7        64.0        62.8       2.59       2.56
- 8        64.7        63.1       2.59       2.55
- 9        65.5        63.7       2.60       2.56
-10        66.3        64.3       2.58       2.56
-11        67.0        65.1       2.57       2.56
-12        67.5        65.8       2.57       2.56
-13        68.0        66.6       2.57       2.56
-14        68.2        67.3       2.58       2.56
-15        68.2        67.8       2.60       2.56
-16        68.0        68.3       2.58       2.56
-17        67.7        68.5       2.58       2.56
-18        67.1        68.5       2.58       2.56
-19        66.4        68.3       2.59       2.56
-20        65.7        68.0       2.58       2.55
-21        64.9        67.4       2.58       2.56
-22        64.2        66.8       2.58       2.55
-23        63.5        66.0       2.58       2.56
-```
+<!-- salida:inicio -->
+<details>
+<summary><b>Salida</b> (24 filas, clic para ver)</summary>
+
+| h | viejo_temp | nuevo_temp | viejo_vib | nuevo_vib |
+|---|---|---|---|---|
+| 0 | 62.9 | 65.2 | 2.58 | 2.55 |
+| 1 | 62.5 | 64.5 | 2.58 | 2.55 |
+| 2 | 62.2 | 63.8 | 2.58 | 2.55 |
+| 3 | 62.3 | 63.2 | 2.59 | 2.56 |
+| 4 | 62.4 | 62.8 | 2.58 | 2.55 |
+| 5 | 62.8 | 62.6 | 2.59 | 2.56 |
+| 6 | 63.3 | 62.6 | 2.58 | 2.55 |
+| 7 | 64 | 62.8 | 2.59 | 2.56 |
+| 8 | 64.7 | 63.1 | 2.59 | 2.55 |
+| 9 | 65.5 | 63.7 | 2.6 | 2.56 |
+| 10 | 66.3 | 64.3 | 2.58 | 2.56 |
+| 11 | 67 | 65.1 | 2.57 | 2.56 |
+| 12 | 67.5 | 65.8 | 2.57 | 2.56 |
+| 13 | 68 | 66.6 | 2.57 | 2.56 |
+| 14 | 68.2 | 67.3 | 2.58 | 2.56 |
+| 15 | 68.2 | 67.8 | 2.6 | 2.56 |
+| 16 | 68 | 68.3 | 2.58 | 2.56 |
+| 17 | 67.7 | 68.5 | 2.58 | 2.56 |
+| 18 | 67.1 | 68.5 | 2.58 | 2.56 |
+| 19 | 66.4 | 68.3 | 2.59 | 2.56 |
+| 20 | 65.7 | 68 | 2.58 | 2.55 |
+| 21 | 64.9 | 67.4 | 2.58 | 2.56 |
+| 22 | 64.2 | 66.8 | 2.58 | 2.55 |
+| 23 | 63.5 | 66 | 2.58 | 2.56 |
+
+</details>
+<!-- salida:fin -->
 
 **Cómo leer la consulta:**
 - `hour(ts)` extrae la hora del día (0 a 23). `GROUP BY 1` agrupa por hora.
@@ -544,28 +582,34 @@ WITH g AS (SELECT eqid, ts, ts-lag(ts) OVER (PARTITION BY eqid ORDER BY ts) gap
 SELECT eqid, ts-gap antes, ts hasta, gap FROM g WHERE gap>INTERVAL 15 MINUTE ORDER BY gap DESC LIMIT 15;
 ```
 
-```text
--- Salida 1 de 3
- equipo_dias  con_huecos  min_n  lecturas_faltantes
-        1198         7.0     36               220.0
+<!-- salida:inicio -->
+**Salida 1 de 3** (1 fila)
 
--- Salida 2 de 3
-  eqid    n      desde               hasta  faltan
-EQ-110 2628 2026-02-01 2026-02-28 08:45:00     252
-EQ-107 2848 2026-02-01 2026-03-02 23:45:00      32
-EQ-209 2848 2026-02-01 2026-03-02 23:45:00      32
-EQ-112 2848 2026-02-01 2026-03-02 23:45:00      32
-EQ-214 2848 2026-02-01 2026-03-02 23:45:00      32
-EQ-116 2848 2026-02-01 2026-03-02 23:45:00      32
+| equipo_dias | con_huecos | min_n | lecturas_faltantes |
+|---|---|---|---|
+| 1198 | 7 | 36 | 220 |
 
--- Salida 3 de 3
-  eqid               antes               hasta             gap
-EQ-107 2026-02-09 09:45:00 2026-02-09 18:00:00 0 days 08:15:00
-EQ-112 2026-02-22 10:45:00 2026-02-22 19:00:00 0 days 08:15:00
-EQ-116 2026-02-19 05:45:00 2026-02-19 14:00:00 0 days 08:15:00
-EQ-209 2026-02-27 11:45:00 2026-02-27 20:00:00 0 days 08:15:00
-EQ-214 2026-02-16 16:45:00 2026-02-17 01:00:00 0 days 08:15:00
-```
+**Salida 2 de 3** (6 filas)
+
+| eqid | n | desde | hasta | faltan |
+|---|---|---|---|---|
+| EQ-110 | 2628 | 2026-02-01 00:00:00 | 2026-02-28 08:45:00 | 252 |
+| EQ-107 | 2848 | 2026-02-01 00:00:00 | 2026-03-02 23:45:00 | 32 |
+| EQ-209 | 2848 | 2026-02-01 00:00:00 | 2026-03-02 23:45:00 | 32 |
+| EQ-112 | 2848 | 2026-02-01 00:00:00 | 2026-03-02 23:45:00 | 32 |
+| EQ-214 | 2848 | 2026-02-01 00:00:00 | 2026-03-02 23:45:00 | 32 |
+| EQ-116 | 2848 | 2026-02-01 00:00:00 | 2026-03-02 23:45:00 | 32 |
+
+**Salida 3 de 3** (5 filas)
+
+| eqid | antes | hasta | gap |
+|---|---|---|---|
+| EQ-107 | 2026-02-09 09:45:00 | 2026-02-09 18:00:00 | 0 days 08:15:00 |
+| EQ-112 | 2026-02-22 10:45:00 | 2026-02-22 19:00:00 | 0 days 08:15:00 |
+| EQ-116 | 2026-02-19 05:45:00 | 2026-02-19 14:00:00 | 0 days 08:15:00 |
+| EQ-209 | 2026-02-27 11:45:00 | 2026-02-27 20:00:00 | 0 days 08:15:00 |
+| EQ-214 | 2026-02-16 16:45:00 | 2026-02-17 01:00:00 | 0 days 08:15:00 |
+<!-- salida:fin -->
 
 **Cómo leer la consulta:**
 - Primera: la subconsulta cuenta cuántos momentos distintos tiene cada (equipo, día) y la externa resume: cuántas combinaciones hay, en cuántas faltan lecturas (`n < 96`), el mínimo y el total faltante. `DISTINCT ts` evita contar los duplicados dos veces.
@@ -614,50 +658,55 @@ SELECT *, round(t_desp-t_antes,2) dT, round(100*(t_desp/t_antes-1),1) pctT, roun
 FROM x ORDER BY abs(v_desp/v_antes-1) DESC;
 ```
 
-```text
--- Salida
-  eqid  t_antes  t_desp  t_desp_sin_convertir  v_antes  v_desp    dT  pctT  pctV
-EQ-209    73.41   73.35                 74.12    2.054   0.085 -0.06  -0.1 -95.9
-EQ-118    72.39   72.28                 72.98    2.145   0.222 -0.11  -0.2 -89.7
-EQ-115    60.76   60.68                 61.46    3.243   4.977 -0.08  -0.1  53.5
-EQ-107    58.07   58.18                 58.92    3.365   2.718  0.11   0.2 -19.2
-EQ-203    68.73   69.44                 70.14    1.650   1.950  0.71   1.0  18.2
-EQ-206    68.20   68.18                 69.16    1.867   1.771 -0.02  -0.0  -5.1
-EQ-112    67.85   67.82                 68.82    1.741   1.769 -0.03  -0.0   1.6
-EQ-218    59.36   59.36                 60.20    3.101   3.092  0.00   0.0  -0.3
-EQ-211    70.91   70.87                 71.69    1.980   1.975 -0.04  -0.1  -0.3
-EQ-208    60.58   60.72                 61.45    3.085   3.092  0.14   0.2   0.2
-EQ-117    72.89   72.83                 73.52    1.817   1.813 -0.06  -0.1  -0.2
-EQ-119    60.74   60.76                 61.47    3.197   3.204  0.02   0.0   0.2
-EQ-205    59.22   59.23                 60.01    3.091   3.085  0.01   0.0  -0.2
-EQ-212    73.12   73.17                 73.93    2.223   2.227  0.05   0.1   0.2
-EQ-220    58.47   58.47                 59.26    2.855   2.860  0.00   0.0   0.2
-EQ-213    61.71   61.66                 62.49    3.203   3.208 -0.05  -0.1   0.2
-EQ-214    69.19   70.22                 70.97    2.081   2.078  1.03   1.5  -0.1
-EQ-111    61.20   61.16                 62.17    3.185   3.181 -0.04  -0.1  -0.1
-EQ-110    57.13   56.97                 57.84    3.187   3.183 -0.16  -0.3  -0.1
-EQ-113    71.01   71.02                 71.78    2.404   2.401  0.01   0.0  -0.1
-EQ-104    57.44   57.52                 58.49    3.238   3.234  0.08   0.1  -0.1
-EQ-210    59.30   59.25                 60.08    2.798   2.795 -0.05  -0.1  -0.1
-EQ-109    60.50   60.54                 61.36    2.826   2.829  0.04   0.1   0.1
-EQ-106    60.14   60.07                 60.73    2.833   2.836 -0.07  -0.1   0.1
-EQ-101    57.24   57.17                 58.04    3.088   3.085 -0.07  -0.1  -0.1
-EQ-103    73.07   73.04                 73.84    2.304   2.306 -0.03  -0.0   0.1
-EQ-116    61.38   61.39                 62.42    3.182   3.184  0.01   0.0   0.1
-EQ-216    72.68   72.63                 73.53    1.695   1.696 -0.05  -0.1   0.1
-EQ-201    67.23   67.30                 67.99    1.873   1.872  0.07   0.1  -0.1
-EQ-204    70.71   70.71                 71.40    2.022   2.023  0.00   0.0   0.0
-EQ-202    70.66   70.74                 71.50    2.079   2.080  0.08   0.1   0.0
-EQ-207    74.60   74.64                 75.47    2.097   2.098  0.04   0.1   0.0
-EQ-108    72.25   72.19                 73.05    2.264   2.265 -0.06  -0.1   0.0
-EQ-120    72.51   72.47                 73.41    2.361   2.360 -0.04  -0.1  -0.0
-EQ-217    70.89   70.91                 71.75    2.363   2.364  0.02   0.0   0.0
-EQ-102    58.41   64.13                 66.14    2.863   2.864  5.72   9.8   0.0
-EQ-219    59.73   61.99                 62.93    3.248   3.248  2.26   3.8   0.0
-EQ-105    69.27   69.08                 70.02    2.164   2.164 -0.19  -0.3   0.0
-EQ-114    57.71   57.52                 58.33    2.758   2.758 -0.19  -0.3   0.0
-EQ-215    58.63   58.63                 59.36    2.892   2.892  0.00   0.0   0.0
-```
+<!-- salida:inicio -->
+<details>
+<summary><b>Salida</b> (40 filas, clic para ver)</summary>
+
+| eqid | t_antes | t_desp | t_desp_sin_convertir | v_antes | v_desp | dT | pctT | pctV |
+|---|---|---|---|---|---|---|---|---|
+| EQ-209 | 73.41 | 73.35 | 74.12 | 2.054 | 0.085 | -0.06 | -0.1 | -95.9 |
+| EQ-118 | 72.39 | 72.28 | 72.98 | 2.145 | 0.222 | -0.11 | -0.2 | -89.7 |
+| EQ-115 | 60.76 | 60.68 | 61.46 | 3.243 | 4.977 | -0.08 | -0.1 | 53.5 |
+| EQ-107 | 58.07 | 58.18 | 58.92 | 3.365 | 2.718 | 0.11 | 0.2 | -19.2 |
+| EQ-203 | 68.73 | 69.44 | 70.14 | 1.65 | 1.95 | 0.71 | 1 | 18.2 |
+| EQ-206 | 68.2 | 68.18 | 69.16 | 1.867 | 1.771 | -0.02 | 0 | -5.1 |
+| EQ-112 | 67.85 | 67.82 | 68.82 | 1.741 | 1.769 | -0.03 | 0 | 1.6 |
+| EQ-218 | 59.36 | 59.36 | 60.2 | 3.101 | 3.092 | 0 | 0 | -0.3 |
+| EQ-211 | 70.91 | 70.87 | 71.69 | 1.98 | 1.975 | -0.04 | -0.1 | -0.3 |
+| EQ-208 | 60.58 | 60.72 | 61.45 | 3.085 | 3.092 | 0.14 | 0.2 | 0.2 |
+| EQ-117 | 72.89 | 72.83 | 73.52 | 1.817 | 1.813 | -0.06 | -0.1 | -0.2 |
+| EQ-119 | 60.74 | 60.76 | 61.47 | 3.197 | 3.204 | 0.02 | 0 | 0.2 |
+| EQ-205 | 59.22 | 59.23 | 60.01 | 3.091 | 3.085 | 0.01 | 0 | -0.2 |
+| EQ-212 | 73.12 | 73.17 | 73.93 | 2.223 | 2.227 | 0.05 | 0.1 | 0.2 |
+| EQ-220 | 58.47 | 58.47 | 59.26 | 2.855 | 2.86 | 0 | 0 | 0.2 |
+| EQ-213 | 61.71 | 61.66 | 62.49 | 3.203 | 3.208 | -0.05 | -0.1 | 0.2 |
+| EQ-214 | 69.19 | 70.22 | 70.97 | 2.081 | 2.078 | 1.03 | 1.5 | -0.1 |
+| EQ-111 | 61.2 | 61.16 | 62.17 | 3.185 | 3.181 | -0.04 | -0.1 | -0.1 |
+| EQ-110 | 57.13 | 56.97 | 57.84 | 3.187 | 3.183 | -0.16 | -0.3 | -0.1 |
+| EQ-113 | 71.01 | 71.02 | 71.78 | 2.404 | 2.401 | 0.01 | 0 | -0.1 |
+| EQ-104 | 57.44 | 57.52 | 58.49 | 3.238 | 3.234 | 0.08 | 0.1 | -0.1 |
+| EQ-210 | 59.3 | 59.25 | 60.08 | 2.798 | 2.795 | -0.05 | -0.1 | -0.1 |
+| EQ-109 | 60.5 | 60.54 | 61.36 | 2.826 | 2.829 | 0.04 | 0.1 | 0.1 |
+| EQ-106 | 60.14 | 60.07 | 60.73 | 2.833 | 2.836 | -0.07 | -0.1 | 0.1 |
+| EQ-101 | 57.24 | 57.17 | 58.04 | 3.088 | 3.085 | -0.07 | -0.1 | -0.1 |
+| EQ-103 | 73.07 | 73.04 | 73.84 | 2.304 | 2.306 | -0.03 | 0 | 0.1 |
+| EQ-116 | 61.38 | 61.39 | 62.42 | 3.182 | 3.184 | 0.01 | 0 | 0.1 |
+| EQ-216 | 72.68 | 72.63 | 73.53 | 1.695 | 1.696 | -0.05 | -0.1 | 0.1 |
+| EQ-201 | 67.23 | 67.3 | 67.99 | 1.873 | 1.872 | 0.07 | 0.1 | -0.1 |
+| EQ-204 | 70.71 | 70.71 | 71.4 | 2.022 | 2.023 | 0 | 0 | 0 |
+| EQ-202 | 70.66 | 70.74 | 71.5 | 2.079 | 2.08 | 0.08 | 0.1 | 0 |
+| EQ-207 | 74.6 | 74.64 | 75.47 | 2.097 | 2.098 | 0.04 | 0.1 | 0 |
+| EQ-108 | 72.25 | 72.19 | 73.05 | 2.264 | 2.265 | -0.06 | -0.1 | 0 |
+| EQ-120 | 72.51 | 72.47 | 73.41 | 2.361 | 2.36 | -0.04 | -0.1 | 0 |
+| EQ-217 | 70.89 | 70.91 | 71.75 | 2.363 | 2.364 | 0.02 | 0 | 0 |
+| EQ-102 | 58.41 | 64.13 | 66.14 | 2.863 | 2.864 | 5.72 | 9.8 | 0 |
+| EQ-219 | 59.73 | 61.99 | 62.93 | 3.248 | 3.248 | 2.26 | 3.8 | 0 |
+| EQ-105 | 69.27 | 69.08 | 70.02 | 2.164 | 2.164 | -0.19 | -0.3 | 0 |
+| EQ-114 | 57.71 | 57.52 | 58.33 | 2.758 | 2.758 | -0.19 | -0.3 | 0 |
+| EQ-215 | 58.63 | 58.63 | 59.36 | 2.892 | 2.892 | 0 | 0 | 0 |
+
+</details>
+<!-- salida:fin -->
 
 **Cómo leer la consulta:**
 - `median(...) FILTER (WHERE viejo)` es la **mediana** solo de las lecturas del sistema viejo ("antes"), y `FILTER (WHERE NOT viejo)` solo del nuevo ("después"). Se usa mediana y no media porque los picos aislados no la mueven.
@@ -684,40 +733,45 @@ SELECT ts::date d, round(avg(vib) FILTER (WHERE eqid='EQ-209'),2) v209, round(av
   round(avg(temp_c) FILTER (WHERE eqid='EQ-219'),1) t219 FROM c GROUP BY 1 ORDER BY 1;
 ```
 
-```text
--- Salida
-         d  v209  v118  v115  t102  t219
-2026-02-01  2.05  2.19  3.22  58.3  59.8
-2026-02-02  2.06  2.14  3.20  58.3  59.7
-2026-02-03  2.06  2.15  3.26  58.3  59.7
-2026-02-04  2.06  2.14  3.18  58.4  59.8
-2026-02-05  2.06  2.17  3.21  58.3  59.8
-2026-02-06  2.09  2.15  3.20  58.4  59.7
-2026-02-07  2.05  2.14  3.23  58.3  59.8
-2026-02-08  2.05  2.15  3.28  58.4  59.7
-2026-02-09  2.06  2.14  3.35  58.4  59.7
-2026-02-10  2.06  2.15  3.44  58.4  59.8
-2026-02-11  2.05  2.15  3.54  58.3  59.7
-2026-02-12  2.05  2.14  3.70  58.4  59.8
-2026-02-13  2.06  2.14  3.87  58.3  59.7
-2026-02-14  1.23  2.15  4.04  58.2  59.7
-2026-02-15  0.08  2.15  4.26  58.3  59.7
-2026-02-16  0.08  2.14  4.50  58.8  59.7
-2026-02-17  0.08  2.15  4.75  60.0  59.7
-2026-02-18  0.08  2.14  4.63  61.3  59.8
-2026-02-19  0.08  2.14  4.34  62.3  59.8
-2026-02-20  0.08  1.66  4.69  63.6  59.8
-2026-02-21  0.09  0.08  5.05  64.8  60.2
-2026-02-22  0.09  0.08  5.43  66.1  61.1
-2026-02-23  0.11  0.09  5.82  67.3  62.2
-2026-02-24  0.13  0.09  6.27  68.4  63.2
-2026-02-25  0.15  0.10  6.71  69.6  65.9
-2026-02-26  0.18  0.11  7.20  70.8  65.9
-2026-02-27  0.17  0.13  7.70  72.0  65.9
-2026-02-28  0.08  0.15  8.45  73.1  65.9
-2026-03-01  0.08  0.18  8.74  74.4  65.9
-2026-03-02  0.08  0.21  9.34  75.5  65.9
-```
+<!-- salida:inicio -->
+<details>
+<summary><b>Salida</b> (30 filas, clic para ver)</summary>
+
+| d | v209 | v118 | v115 | t102 | t219 |
+|---|---|---|---|---|---|
+| 2026-02-01 00:00:00 | 2.05 | 2.19 | 3.22 | 58.3 | 59.8 |
+| 2026-02-02 00:00:00 | 2.06 | 2.14 | 3.2 | 58.3 | 59.7 |
+| 2026-02-03 00:00:00 | 2.06 | 2.15 | 3.26 | 58.3 | 59.7 |
+| 2026-02-04 00:00:00 | 2.06 | 2.14 | 3.18 | 58.4 | 59.8 |
+| 2026-02-05 00:00:00 | 2.06 | 2.17 | 3.21 | 58.3 | 59.8 |
+| 2026-02-06 00:00:00 | 2.09 | 2.15 | 3.2 | 58.4 | 59.7 |
+| 2026-02-07 00:00:00 | 2.05 | 2.14 | 3.23 | 58.3 | 59.8 |
+| 2026-02-08 00:00:00 | 2.05 | 2.15 | 3.28 | 58.4 | 59.7 |
+| 2026-02-09 00:00:00 | 2.06 | 2.14 | 3.35 | 58.4 | 59.7 |
+| 2026-02-10 00:00:00 | 2.06 | 2.15 | 3.44 | 58.4 | 59.8 |
+| 2026-02-11 00:00:00 | 2.05 | 2.15 | 3.54 | 58.3 | 59.7 |
+| 2026-02-12 00:00:00 | 2.05 | 2.14 | 3.7 | 58.4 | 59.8 |
+| 2026-02-13 00:00:00 | 2.06 | 2.14 | 3.87 | 58.3 | 59.7 |
+| 2026-02-14 00:00:00 | 1.23 | 2.15 | 4.04 | 58.2 | 59.7 |
+| 2026-02-15 00:00:00 | 0.08 | 2.15 | 4.26 | 58.3 | 59.7 |
+| 2026-02-16 00:00:00 | 0.08 | 2.14 | 4.5 | 58.8 | 59.7 |
+| 2026-02-17 00:00:00 | 0.08 | 2.15 | 4.75 | 60 | 59.7 |
+| 2026-02-18 00:00:00 | 0.08 | 2.14 | 4.63 | 61.3 | 59.8 |
+| 2026-02-19 00:00:00 | 0.08 | 2.14 | 4.34 | 62.3 | 59.8 |
+| 2026-02-20 00:00:00 | 0.08 | 1.66 | 4.69 | 63.6 | 59.8 |
+| 2026-02-21 00:00:00 | 0.09 | 0.08 | 5.05 | 64.8 | 60.2 |
+| 2026-02-22 00:00:00 | 0.09 | 0.08 | 5.43 | 66.1 | 61.1 |
+| 2026-02-23 00:00:00 | 0.11 | 0.09 | 5.82 | 67.3 | 62.2 |
+| 2026-02-24 00:00:00 | 0.13 | 0.09 | 6.27 | 68.4 | 63.2 |
+| 2026-02-25 00:00:00 | 0.15 | 0.1 | 6.71 | 69.6 | 65.9 |
+| 2026-02-26 00:00:00 | 0.18 | 0.11 | 7.2 | 70.8 | 65.9 |
+| 2026-02-27 00:00:00 | 0.17 | 0.13 | 7.7 | 72 | 65.9 |
+| 2026-02-28 00:00:00 | 0.08 | 0.15 | 8.45 | 73.1 | 65.9 |
+| 2026-03-01 00:00:00 | 0.08 | 0.18 | 8.74 | 74.4 | 65.9 |
+| 2026-03-02 00:00:00 | 0.08 | 0.21 | 9.34 | 75.5 | 65.9 |
+
+</details>
+<!-- salida:fin -->
 - **EQ-115** (bomba) sube su vibración de forma sostenida: ~3,2 el 01/02 → 9,34 el 02/03, muy por encima de su umbral de 7,1. Es una degradación gradual.
 - **EQ-102** (bomba) sube su temperatura desde el 16/02: 58,4 → 75,5 °C el 02/03, casi lineal.
 - **EQ-219** sube de 59,7 a 65,9 °C desde el 21/02 y **queda clavado en 65,9 desde el 25/02**: seis días con el mismo valor exacto, sospechoso de sensor trabado.
@@ -782,17 +836,21 @@ SELECT tipo, count(*) n, min(CAST(umbral_vib_mm_s AS DOUBLE)) vib_min, max(CAST(
        min(CAST(umbral_temp_c AS DOUBLE)) t_min, max(CAST(umbral_temp_c AS DOUBLE)) t_max FROM eq GROUP BY 1;
 ```
 
-```text
--- Salida 1 de 2
- filas  ids                   tipos                 plantas  nulos
-    40   40 bomba,compresor,turbina planta-norte,planta-sur    0.0
+<!-- salida:inicio -->
+**Salida 1 de 2** (1 fila)
 
--- Salida 2 de 2
-     tipo  n  vib_min  vib_max  t_min  t_max
-    bomba 20      7.1      7.1   85.0   85.0
-compresor 13      4.5      4.5   95.0   95.0
-  turbina  7      2.8      2.8  110.0  110.0
-```
+| filas | ids | tipos | plantas | nulos |
+|---|---|---|---|---|
+| 40 | 40 | bomba,compresor,turbina | planta-norte,planta-sur | 0 |
+
+**Salida 2 de 2** (3 filas)
+
+| tipo | n | vib_min | vib_max | t_min | t_max |
+|---|---|---|---|---|---|
+| bomba | 20 | 7.1 | 7.1 | 85 | 85 |
+| compresor | 13 | 4.5 | 4.5 | 95 | 95 |
+| turbina | 7 | 2.8 | 2.8 | 110 | 110 |
+<!-- salida:fin -->
 
 **Cómo leer la consulta:**
 - `string_agg(DISTINCT tipo, ',')` concatena los valores distintos en un solo texto ("bomba,compresor,turbina"). Sirve para ver de un vistazo qué categorías existen.
@@ -827,27 +885,31 @@ SELECT eqid, count(*) filas_vib_sobre_umbral FROM c JOIN eq e ON e.equipment_id=
 WHERE vib>CAST(e.umbral_vib_mm_s AS DOUBLE) GROUP BY 1 ORDER BY 2 DESC LIMIT 12;
 ```
 
-```text
--- Salida 1 de 2
- viejo     n  pct_vib_sobre_umbral  pct_temp_sobre_umbral  pct_temp_sobre_umbral_sin_convertir
-  True 38597                  0.24                  0.000                                 0.00
- False 76420                  0.91                  0.004                                14.92
+<!-- salida:inicio -->
+**Salida 1 de 2** (2 filas)
 
--- Salida 2 de 2
-  eqid  filas_vib_sobre_umbral
-EQ-115                     450
-EQ-206                     116
-EQ-107                      78
-EQ-112                      77
-EQ-203                      34
-EQ-220                       3
-EQ-104                       3
-EQ-118                       2
-EQ-218                       2
-EQ-208                       2
-EQ-101                       2
-EQ-110                       2
-```
+| viejo | n | pct_vib_sobre_umbral | pct_temp_sobre_umbral | pct_temp_sobre_umbral_sin_convertir |
+|---|---|---|---|---|
+| True | 38597 | 0.24 | 0 | 0 |
+| False | 76420 | 0.91 | 0.004 | 14.92 |
+
+**Salida 2 de 2** (12 filas)
+
+| eqid | filas_vib_sobre_umbral |
+|---|---|
+| EQ-115 | 450 |
+| EQ-206 | 116 |
+| EQ-107 | 78 |
+| EQ-112 | 77 |
+| EQ-203 | 34 |
+| EQ-220 | 3 |
+| EQ-104 | 3 |
+| EQ-118 | 2 |
+| EQ-218 | 2 |
+| EQ-208 | 2 |
+| EQ-101 | 2 |
+| EQ-110 | 2 |
+<!-- salida:fin -->
 
 **Cómo leer la consulta:**
 - `c JOIN eq e ON e.equipment_id = c.eqid` cruza cada lectura con el umbral **de su equipo** en el maestro.
@@ -884,31 +946,38 @@ FROM ot;
 SELECT equipo, count(*) FROM ot WHERE equipo NOT SIMILAR TO 'EQ-[0-9]+' GROUP BY 1 ORDER BY 1;
 ```
 
-```text
--- Salida 1 de 2
- ot_total  cruzan_crudo  cruzan_normalizado
-       86          69.0                86.0
+<!-- salida:inicio -->
+**Salida 1 de 2** (1 fila)
 
--- Salida 2 de 2
- equipo  count_star()
- EQ-101             1
- EQ-203             1
- EQ-209             1
- EQ-217             1
-  EQ103             1
-  EQ108             1
-  EQ109             1
-  EQ113             1
-  EQ118             1
-  EQ211             1
-  EQ215             1
-  EQ217             1
-  EQ218             1
-  EQ220             1
- eq-117             1
- eq-205             1
- eq-215             1
-```
+| ot_total | cruzan_crudo | cruzan_normalizado |
+|---|---|---|
+| 86 | 69 | 86 |
+
+<details>
+<summary><b>Salida 2 de 2</b> (17 filas, clic para ver)</summary>
+
+| equipo | count_star() |
+|---|---|
+|  EQ-101 | 1 |
+|  EQ-203 | 1 |
+|  EQ-209 | 1 |
+|  EQ-217 | 1 |
+| EQ103 | 1 |
+| EQ108 | 1 |
+| EQ109 | 1 |
+| EQ113 | 1 |
+| EQ118 | 1 |
+| EQ211 | 1 |
+| EQ215 | 1 |
+| EQ217 | 1 |
+| EQ218 | 1 |
+| EQ220 | 1 |
+| eq-117 | 1 |
+| eq-205 | 1 |
+| eq-215 | 1 |
+
+</details>
+<!-- salida:fin -->
 
 **Cómo leer la consulta:**
 - `equipo IN (SELECT equipment_id FROM eq)` es verdadero cuando el ID **tal cual** figura en el maestro.
@@ -941,15 +1010,17 @@ SELECT equipo, count(*) FROM ot WHERE equipo NOT SIMILAR TO 'EQ-[0-9]+' GROUP BY
 SELECT coalesce(tipo,'<vacío>') tipo, count(*) n FROM ot GROUP BY 1 ORDER BY 2 DESC;
 ```
 
-```text
--- Salida
-      tipo  n
-      PREV 42
-   <vacío> 20
-Preventivo 19
-Correctivo  4
-      CORR  1
-```
+<!-- salida:inicio -->
+**Salida** (5 filas)
+
+| tipo | n |
+|---|---|
+| PREV | 42 |
+| <vacío> | 20 |
+| Preventivo | 19 |
+| Correctivo | 4 |
+| CORR | 1 |
+<!-- salida:fin -->
 
 **Cómo leer la consulta:** `coalesce(tipo, '<vacío>')` reemplaza los NULL por el texto `<vacío>` para que aparezcan como una categoría más. `ORDER BY 2 DESC` ordena por la segunda columna (la cantidad), de mayor a menor.
 
@@ -973,15 +1044,19 @@ FROM ot;
 SELECT count(*) ot_ultimos_7d FROM ot WHERE TRY_STRPTIME(fecha_apertura,'%d/%m/%Y %H:%M') >= TIMESTAMP '2026-02-23 23:45:00';
 ```
 
-```text
--- Salida 1 de 2
- apertura_no_parsea  cierre_vacio  cierre_antes_apertura              min_ap              max_ap
-                0.0           0.0                    0.0 2026-02-01 09:45:00 2026-03-02 16:45:00
+<!-- salida:inicio -->
+**Salida 1 de 2** (1 fila)
 
--- Salida 2 de 2
- ot_ultimos_7d
-            25
-```
+| apertura_no_parsea | cierre_vacio | cierre_antes_apertura | min_ap | max_ap |
+|---|---|---|---|---|
+| 0 | 0 | 0 | 2026-02-01 09:45:00 | 2026-03-02 16:45:00 |
+
+**Salida 2 de 2** (1 fila)
+
+| ot_ultimos_7d |
+|---|
+| 25 |
+<!-- salida:fin -->
 
 **Cómo leer la consulta:**
 - `TRY_STRPTIME(texto, '%d/%m/%Y %H:%M')` convierte un texto en fecha según un molde: `%d` día, `%m` mes, `%Y` año de 4 dígitos, `%H` hora, `%M` minuto. La versión con `TRY_` devuelve NULL en vez de fallar si el texto no encaja. Ojo con el orden **día/mes/año** (formato argentino): `01/02/2026` es el 1 de febrero, no el 2 de enero.
@@ -1017,30 +1092,35 @@ WHERE tipo IN ('CORR','Correctivo')
 ORDER BY apertura;
 ```
 
-```text
--- Salida
-nro_ot eq_norm            apertura       tipo                                                                  descr
- 40224  EQ-119 2026-02-07 16:45:00       PREV                                 Lubric. rodamientos LA y LOA, sin obs.
- 40227  EQ-107 2026-02-09 10:00:00 Correctivo Parada no programada. Rotura de rodamiento lado acople, equipo fuera d
- 40233  EQ-216 2026-02-11 09:45:00       PREV                                 Lubric. rodamientos LA y LOA, sin obs.
- 40236  EQ-106 2026-02-12 08:30:00 Preventivo                                 Lubric. rodamientos LA y LOA, sin obs.
- 40241  EQ-113 2026-02-13 08:45:00       PREV                                 Lubric. rodamientos LA y LOA, sin obs.
- 40244  EQ-209 2026-02-14 11:00:00 Preventivo Reemplazo de sensor de vibración por fin de vida útil. Se instala VX-2
- 40246  EQ-206 2026-02-15 10:00:00 Correctivo Vibración alta detectada en ronda. Se realiza alineación y balanceo. P
- 40247  EQ-113 2026-02-15 11:15:00 Preventivo                                 Lubric. rodamientos LA y LOA, sin obs.
- 40250  EQ-101 2026-02-16 10:00:00    <vacío> Revisión de cableado de instrumentación por pedido de sala de control.
- 40252  EQ-214 2026-02-16 14:00:00    <vacío> Disparo x alta temp. Intercambiador obstruido, se limpia. Equipo deten
- 40254  EQ-115 2026-02-18 11:00:00       PREV Ruido en rodamiento LOA, se relubrica. Baja un poco el ruido pero pers
- 40255  EQ-120 2026-02-18 14:00:00 Correctivo          Reclamo de operador por ruido, se inspecciona, sin hallazgos.
- 40256  EQ-116 2026-02-19 03:00:00 Correctivo Pérdida importante por sello mecánico, se para la bomba de urgencia. C
- 40258  EQ-203 2026-02-19 11:15:00       PREV                                 Lubric. rodamientos LA y LOA, sin obs.
- 40264  EQ-118 2026-02-20 15:00:00    <vacío>                           cambio sensor vibr. -> VX-200. queda andando
- 40267  EQ-101 2026-02-21 15:30:00       PREV                                 Lubric. rodamientos LA y LOA, sin obs.
- 40269  EQ-112 2026-02-22 08:00:00       CORR Turbina sale de servicio por vibr. muy alta (actúa protección). Desbal
- 40277  EQ-205 2026-02-25 10:00:00    <vacío>                     Se solicita repuesto (rodamiento 6312) para stock.
- 40283  EQ-209 2026-02-27 09:00:00    <vacío> Equipo parado por operador: ruido fuerte y vibración. Rodam. dañado, s
- 40285  EQ-210 2026-02-28 12:30:00       PREV                                 Lubric. rodamientos LA y LOA, sin obs.
-```
+<!-- salida:inicio -->
+<details>
+<summary><b>Salida</b> (20 filas, clic para ver)</summary>
+
+| nro_ot | eq_norm | apertura | tipo | descr |
+|---|---|---|---|---|
+| 40224 | EQ-119 | 2026-02-07 16:45:00 | PREV | Lubric. rodamientos LA y LOA, sin obs. |
+| 40227 | EQ-107 | 2026-02-09 10:00:00 | Correctivo | Parada no programada. Rotura de rodamiento lado acople, equipo fuera d |
+| 40233 | EQ-216 | 2026-02-11 09:45:00 | PREV | Lubric. rodamientos LA y LOA, sin obs. |
+| 40236 | EQ-106 | 2026-02-12 08:30:00 | Preventivo | Lubric. rodamientos LA y LOA, sin obs. |
+| 40241 | EQ-113 | 2026-02-13 08:45:00 | PREV | Lubric. rodamientos LA y LOA, sin obs. |
+| 40244 | EQ-209 | 2026-02-14 11:00:00 | Preventivo | Reemplazo de sensor de vibración por fin de vida útil. Se instala VX-2 |
+| 40246 | EQ-206 | 2026-02-15 10:00:00 | Correctivo | Vibración alta detectada en ronda. Se realiza alineación y balanceo. P |
+| 40247 | EQ-113 | 2026-02-15 11:15:00 | Preventivo | Lubric. rodamientos LA y LOA, sin obs. |
+| 40250 | EQ-101 | 2026-02-16 10:00:00 | <vacío> | Revisión de cableado de instrumentación por pedido de sala de control. |
+| 40252 | EQ-214 | 2026-02-16 14:00:00 | <vacío> | Disparo x alta temp. Intercambiador obstruido, se limpia. Equipo deten |
+| 40254 | EQ-115 | 2026-02-18 11:00:00 | PREV | Ruido en rodamiento LOA, se relubrica. Baja un poco el ruido pero pers |
+| 40255 | EQ-120 | 2026-02-18 14:00:00 | Correctivo | Reclamo de operador por ruido, se inspecciona, sin hallazgos. |
+| 40256 | EQ-116 | 2026-02-19 03:00:00 | Correctivo | Pérdida importante por sello mecánico, se para la bomba de urgencia. C |
+| 40258 | EQ-203 | 2026-02-19 11:15:00 | PREV | Lubric. rodamientos LA y LOA, sin obs. |
+| 40264 | EQ-118 | 2026-02-20 15:00:00 | <vacío> | cambio sensor vibr. -> VX-200. queda andando |
+| 40267 | EQ-101 | 2026-02-21 15:30:00 | PREV | Lubric. rodamientos LA y LOA, sin obs. |
+| 40269 | EQ-112 | 2026-02-22 08:00:00 | CORR | Turbina sale de servicio por vibr. muy alta (actúa protección). Desbal |
+| 40277 | EQ-205 | 2026-02-25 10:00:00 | <vacío> | Se solicita repuesto (rodamiento 6312) para stock. |
+| 40283 | EQ-209 | 2026-02-27 09:00:00 | <vacío> | Equipo parado por operador: ruido fuerte y vibración. Rodam. dañado, s |
+| 40285 | EQ-210 | 2026-02-28 12:30:00 | PREV | Lubric. rodamientos LA y LOA, sin obs. |
+
+</details>
+<!-- salida:fin -->
 
 **Cómo leer la consulta:** busca las OT que *no parecen rutina*: las correctivas explícitas, las sin tipo cuya descripción **no** empieza con una palabra típica de mantenimiento preventivo (verificación, lubricación, limpieza…), y las que hablan de sensor o rodamiento. `ILIKE '%sensor%'` busca "sensor" en cualquier parte del texto sin distinguir mayúsculas. `left(descripcion, 70)` recorta a 70 caracteres para que la tabla entre.
 
