@@ -4,6 +4,8 @@
 - **Para quién es este documento:** para sentarse a leerlo de punta a punta y entender qué hay en los datos, por qué cada consulta es como es, qué hay que decidir y qué conviene decidir.
 - **Qué es un perfilado:** el *perfilado de datos* (data profiling) es la inspección sistemática de datos crudos —estructura, calidad, distribución— **antes** de transformarlos. Aquí solo se observa. Las decisiones se toman después y se registran en `DECISIONES.md`, citando el número de hallazgo (H-NN).
 
+**Gráficos:** las imágenes de `docs/graficos/` (H-04, H-07, H-08, H-09) se regeneran con `uv run python docs/graficos/generar_graficos.py`. El script lee `drop/` en solo lectura y necesita Google Chrome instalado (variable `CHROME_BIN` si no está en la ruta de macOS por defecto).
+
 ## Cómo está organizado cada hallazgo
 
 Cada hallazgo (H-NN) tiene siempre las mismas partes, en este orden:
@@ -251,11 +253,11 @@ SELECT count(*) filas_C_sobre_100, count(DISTINCT eqid) FROM l WHERE unidad_temp
 
 **Cómo leer la consulta:**
 - `eqid NOT IN (SELECT equipment_id FROM eq)` busca IDs de lecturas que no figuran en el maestro (`eq`). Es el cruce clásico para encontrar "huérfanos".
-- La tercera consulta busca temperaturas superiores a 100 etiquetadas como °C; en un equipo que opera a ~65 °C es un valor sospechoso.
+- La tercera consulta busca lecturas marcadas °C con valor mayor a 100. **El 100 no sale del cliente ni del fabricante:** es un número redondo que elegí al ver en H-04 que había filas "en °C" de hasta 149,7 cuando todo lo demás ronda 52–80. Es una sonda exploratoria, no un criterio de decisión. Ojo: no es un límite físico, porque el umbral de las turbinas es 110 °C (ver H-11).
 
-**Resultado:** el único huérfano es `EQ-TEST-01`: 48 filas (una por hora, de 20/02 00:00 a 21/02 23:00), solo en formato nuevo. Es también el único con "°C" mayores a 100 (15 filas, todas suyas).
+**Resultado:** el único huérfano es `EQ-TEST-01`: 48 filas (una por hora, de 20/02 00:00 a 21/02 23:00), solo en formato nuevo. Es también el único con "°C" mayores a 100 (15 filas, todas suyas). Sus lecturas marcadas °C van de 3,7 a 149,7, un rango que ningún equipo real tiene. Sin él, el máximo de todo el mes (con °F convertido) es 95,8 °C y el percentil 99,9 es 83,1 °C. Contraste: `SELECT max(temp_c), quantile_cont(temp_c, 0.999) FROM c;`.
 
-**Qué significa:** parece una prueba de instalación del sistema nuevo. No es uno de los 40 equipos y explica el "41" de H-02. Si no se excluye, contamina promedios y podría aparecer como candidato a mantenimiento.
+**Qué significa:** la razón sólida para excluirlo es que **no está en el maestro** (el cruce del primer SELECT), no el umbral de 100 °C: ese número fue solo una pista que ayudó a notarlo. Parece una prueba de instalación del sistema nuevo. No es uno de los 40 equipos y explica el "41" de H-02. Si no se excluye, contamina promedios y podría aparecer como candidato a mantenimiento.
 
 **Decisión a tomar: cómo excluirlo.**
 
@@ -303,6 +305,10 @@ SELECT count(*) FROM l WHERE unidad_temp='F' AND (TRY_CAST(temp_txt AS DOUBLE)-3
 
 (*) Los °C mayores a 100 son todos de `EQ-TEST-01` (H-06). Las 11.400 filas °F no son equipos enteros: están repartidas en **los 40 equipos** (~16 % de las lecturas de cada uno; por ejemplo EQ-104 tiene 17,1 %). Convertidas, ninguna supera 100 °C.
 
+![H-04: distribución de temperatura cruda y convertida](graficos/h04-unidades.png)
+
+*Cómo leer el gráfico:* cada línea cuenta cuántas lecturas hay en cada grado. A la izquierda, tal como llegan los datos: el sistema viejo y el nuevo marcado °C viven entre 52 y 80, pero las filas marcadas °F forman otra "montaña" cerca de 150. A la derecha, con °F convertido a °C, las tres curvas ocupan el mismo rango y tienen la misma forma de dos picos.
+
 **Qué significa:** 149,3 °F equivalen a 65,2 °C, casi igual a la mediana del viejo (64,6 °C). Eso confirma que son °F auténticos y no un error. El sistema viejo no declara unidad, pero su rango (52–79) es coherente con °C.
 
 **Decisión a tomar: cómo convertir.**
@@ -314,7 +320,7 @@ SELECT count(*) FROM l WHERE unidad_temp='F' AND (TRY_CAST(temp_txt AS DOUBLE)-3
 | C. Descartar las filas °F | Sin riesgo de conversión | Pierde el 14,9 % del sistema nuevo y deja huecos |
 | D. A, más una **verificación** que avise si una fila marcada °C vale más de 100, o °F menos de 100 | Detecta unidades mal etiquetadas | Un poco más de código |
 
-**Recomendación: D** (A con salvaguarda). La unidad declarada es la fuente de verdad, y la verificación atrapa el caso de "el proveedor etiquetó mal". El sistema viejo se asume en °C, y eso se escribe como asunción. La salvaguarda no se activa con los datos de hoy una vez excluido `EQ-TEST-01`.
+**Recomendación: D** (A con salvaguarda). La unidad declarada es la fuente de verdad, y la verificación atrapa el caso de "el proveedor etiquetó mal". El sistema viejo se asume en °C, y eso se escribe como asunción. La salvaguarda no se activa con los datos de hoy una vez excluido `EQ-TEST-01`. Atención: el valor de corte de esa verificación todavía hay que fijarlo con criterio. El máximo real del mes es 95,8 °C, así que un corte de 100 °C (el de la sonda exploratoria de H-06) queda muy ajustado; conviene atarlo al umbral de cada tipo de equipo (85, 95 o 110 °C) y no a un número redondo.
 
 ## H-07 · Desfase horario de ~3 horas entre sistemas (hipótesis)
 
@@ -348,6 +354,10 @@ FROM c GROUP BY 1 ORDER BY 1;
 | 18 | 67,1 | **68,5** (máximo) |
 
 Sistema viejo: máximo 14–15 h, mínimo ~02 h. Sistema nuevo: máximo 17–18 h, mínimo 05–06 h. Corrimiento: **+3 horas**. La vibración, en cambio, no tiene ciclo diario (2,58 vs 2,56 plana).
+
+![H-07: ciclo diario de temperatura por sistema](graficos/h07-ciclo-diario.png)
+
+*Cómo leer el gráfico:* cada punto es la temperatura promedio de todos los equipos a esa hora del día. Las dos curvas tienen la misma forma (sube de tarde, baja de madrugada), pero la naranja (nuevo) está desplazada hacia la derecha unas 3 horas respecto de la azul (viejo).
 
 Dato extra que complica la hipótesis: en la frontera entre sistemas **no hay salto ni solape de 3 horas** (las lecturas del equipo EQ-101 pasan de 10/02 23:45 a 11/02 00:00 sin cortes; la temperatura sube de 55,5 a 57,8 °C en ese paso).
 
@@ -391,6 +401,10 @@ SELECT eqid, ts-gap antes, ts hasta, gap FROM g WHERE gap>INTERVAL 15 MINUTE ORD
 **Resultado:** 1.198 combinaciones equipo-día; 7 con huecos; **220 lecturas faltantes**. Hay dos patrones:
 1. **EQ-110:** tiene 2.628 de 2.880; su último dato es el 28/02 08:45 y no vuelve (faltan 252). Es el motivo de que el 01/03 y 02/03 figuren 39 equipos.
 2. **Cinco equipos** (EQ-107, EQ-112, EQ-116, EQ-209, EQ-214) con **un único hueco de 8 h 15 min** cada uno (32 lecturas): EQ-107 el 09/02, EQ-214 el 16/02, EQ-116 el 19/02, EQ-112 el 22/02, EQ-209 el 27/02. Son los mismos cinco equipos con falla con parada en las OT (H-16), el mismo día.
+
+![H-08: lecturas faltantes por equipo y día](graficos/h08-huecos.png)
+
+*Cómo leer el gráfico:* cada fila es un equipo y cada columna un día. Un cuadrado gris significa que no faltó ninguna lectura; uno azul muestra cuántas faltaron (de 96). EQ-110 aparece con 60 el 28/02 y con 96 (el día entero) el 01/03 y 02/03. EQ-214 muestra 28 + 4 porque su hueco de 8 h 15 min cruza la medianoche del 16 al 17/02.
 
 **Qué significa:** un hueco no es un cero ni una lectura normal: es **ausencia de dato**. Y la ausencia tiene sentido: los equipos paran, y mientras están parados no reportan. Por eso el hueco de 8 h es casi una huella de la falla. EQ-110, en cambio, se calla desde el 28/02 y **ninguna OT lo explica**: puede estar fuera de servicio o con el sensor caído.
 
@@ -454,6 +468,10 @@ SELECT ts::date d, round(avg(vib) FILTER (WHERE eqid='EQ-209'),2) v209, round(av
 - **EQ-102** (bomba) sube su temperatura desde el 16/02: 58,4 → 75,5 °C el 02/03, casi lineal.
 - **EQ-219** sube de 59,7 a 65,9 °C desde el 21/02 y **queda clavado en 65,9 desde el 25/02**: seis días con el mismo valor exacto, sospechoso de sensor trabado.
 - **EQ-209 y EQ-118:** caída a ~0,08 (ver H-10).
+
+![H-09: trayectorias de los equipos que cambian](graficos/h09-trayectorias.png)
+
+*Cómo leer el gráfico:* un panel por equipo, con el promedio diario de la variable que cambia. EQ-115 sube hasta cruzar su umbral (línea punteada gris); EQ-102 sube casi en línea recta; EQ-219 sube y queda plana en 65,9; EQ-209 y EQ-118 caen a casi cero el mismo día del cambio de sensor (línea naranja punteada, datos de las OT, ver H-10).
 
 **Qué significa:** la mediana de todos los equipos prácticamente no se movió, así que **el cambio de sistema no cambió el nivel de lo que se mide** (una vez convertidas las °F). Los 9 equipos con cambio se mueven de a uno y a su propio ritmo: son eventos propios de cada equipo, no del sistema. Además hay **picos aislados**: 16 lecturas de vibración mayores a 10 mm/s (máximo 32,8) repartidas de a 1 o 2 en 12 equipos (`SELECT eqid, count(*) FROM c WHERE vib>10 GROUP BY 1`), que justifican usar mediana.
 
