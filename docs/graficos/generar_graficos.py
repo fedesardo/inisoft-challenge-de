@@ -106,18 +106,23 @@ colores = {"Viejo (sin unidad)": AZUL, "Nuevo marcado °C": NARANJA, "Nuevo marc
 fig = make_subplots(rows=1, cols=2, shared_yaxes=True, horizontal_spacing=0.04,
                     subplot_titles=("Temperatura cruda, como llega", "Temperatura con °F convertido a °C"))
 for col, campo in ((1, "temp_raw"), (2, "temp_c")):
-    d = con.sql(f"""SELECT {CASE} grupo, floor({campo}) b, count(*) n FROM c GROUP BY 1,2 ORDER BY 2""").df()
+    # Porcentaje dentro de cada grupo: los grupos tienen distinta cantidad de filas,
+    # y con conteos crudos las curvas tendrían alturas distintas aunque tengan la misma forma.
+    d = con.sql(f"""SELECT grupo, b, 100.0*n/sum(n) OVER (PARTITION BY grupo) pct
+                    FROM (SELECT {CASE} grupo, floor({campo}) b, count(*) n FROM c GROUP BY 1,2)
+                    ORDER BY b""").df()
     for grupo, color in colores.items():
         g = d[d.grupo == grupo]
-        fig.add_scatter(x=g.b, y=g.n, mode="lines", name=grupo, showlegend=(col == 1),
+        fig.add_scatter(x=g.b, y=g.pct, mode="lines", name=grupo, showlegend=(col == 1),
                         line=dict(color=color, width=2), row=1, col=col)
-fig.add_annotation(x=105, y=3300, text="Viejo y nuevo en °C:<br>rango 52–80", font=dict(color=TEXTO_2), showarrow=False, xref="x", yref="y")
-fig.add_annotation(x=149, y=950, text="°F del nuevo<br>(valores ~150)", font=dict(color=TEXTO_2), showarrow=False, xref="x", yref="y")
-fig.add_annotation(x=90, y=3300, text="Ya convertido, las tres<br>curvas se superponen", font=dict(color=TEXTO_2), showarrow=False, xref="x2", yref="y2")
+fig.add_annotation(x=105, y=5.5, text="Viejo y nuevo en °C:<br>rango 52–80", font=dict(color=TEXTO_2), showarrow=False, xref="x", yref="y")
+fig.add_annotation(x=149, y=5.0, text="°F del nuevo<br>(valores ~150)", font=dict(color=TEXTO_2), showarrow=False, xref="x", yref="y")
+fig.add_annotation(x=90, y=5.5, text="Ya convertido, las tres<br>curvas se superponen", font=dict(color=TEXTO_2), showarrow=False, xref="x2", yref="y2")
 base(fig, "H-04 · Sin convertir, las lecturas en °F forman otra \"montaña\" a ~150", 1100, 500)
-fig.update_xaxes(title="Temperatura", range=[40, 210], row=1, col=1)
-fig.update_xaxes(title="Temperatura (°C)", range=[40, 100], row=1, col=2)
-fig.update_yaxes(title="Lecturas por grado", row=1, col=1)
+fig.update_xaxes(title="Temperatura tal como llega (°C o °F según la fila)", range=[40, 210],
+                 dtick=10, tickangle=-90, row=1, col=1)
+fig.update_xaxes(title="Temperatura en °C", range=[40, 100], dtick=5, row=1, col=2)
+fig.update_yaxes(title="% de las lecturas del grupo<br>que caen en cada grado", row=1, col=1)
 fig.update_layout(legend=dict(orientation="h", y=1.16, x=0.02, xanchor="left"),
                   margin=dict(l=60, r=30, t=110, b=60))
 fig.update_annotations(font=dict(color=TEXTO, size=13))

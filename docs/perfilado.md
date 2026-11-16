@@ -307,7 +307,11 @@ SELECT count(*) FROM l WHERE unidad_temp='F' AND (TRY_CAST(temp_txt AS DOUBLE)-3
 
 ![H-04: distribución de temperatura cruda y convertida](graficos/h04-unidades.png)
 
-*Cómo leer el gráfico:* cada línea cuenta cuántas lecturas hay en cada grado. A la izquierda, tal como llegan los datos: el sistema viejo y el nuevo marcado °C viven entre 52 y 80, pero las filas marcadas °F forman otra "montaña" cerca de 150. A la derecha, con °F convertido a °C, las tres curvas ocupan el mismo rango y tienen la misma forma de dos picos.
+*Cómo leer el gráfico:*
+- **Eje X:** la temperatura. A la izquierda tal como llega (en °C o °F según la fila); a la derecha, con las °F ya convertidas a °C.
+- **Eje Y:** el porcentaje de las lecturas **de ese mismo grupo** que caen en cada grado. Por ejemplo, un 7 % a 70 °C significa que 7 de cada 100 lecturas del grupo valen entre 70 y 71. Se usa porcentaje y no cantidad porque los grupos tienen distinto tamaño (el sistema nuevo tiene más filas que el viejo): con cantidades las curvas tendrían alturas distintas aunque tuvieran la misma forma.
+- **Colores:** azul = sistema viejo (no declara unidad; se asume °C). Naranja = sistema nuevo, filas marcadas °C. Verde = sistema nuevo, filas marcadas °F.
+- **Qué muestra:** a la izquierda, azul y naranja viven entre 52 y 80, pero la verde forma otra "montaña" cerca de 150: son valores en °F. A la derecha, ya convertida, la verde cae exactamente sobre las otras dos. Las tres tienen la misma forma de dos picos (cerca de 58 y 70 °C), lo que confirma que las filas marcadas °F son temperaturas reales en otra unidad y no un error.
 
 **Qué significa:** 149,3 °F equivalen a 65,2 °C, casi igual a la mediana del viejo (64,6 °C). Eso confirma que son °F auténticos y no un error. El sistema viejo no declara unidad, pero su rango (52–79) es coherente con °C.
 
