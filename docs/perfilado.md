@@ -670,7 +670,7 @@ SELECT count(*) ot_ultimos_7d FROM ot WHERE TRY_STRPTIME(fecha_apertura,'%d/%m/%
 | B. Usar solo cortes con 7 días de futuro completo (hasta el 23/02) | Resultado limpio | Se pierde la última semana del mes, que es justo la que se pide ("esta semana") |
 | C. B para el backtest, y la lista final (al cierre de datos) se calcula igual, sin evaluación | Honesto: la lista actual existe, su evaluación no | La última semana no tiene evidencia propia |
 
-**Recomendación: C.** Es la única forma sin trampa: la lista de "esta semana" se produce con el mismo criterio, y el informe dice explícitamente que ese último tramo no se puede evaluar todavía. Las 5 fallas con parada (H-16) caen entre el 09/02 y el 27/02: la de EQ-209 (27/02) queda dentro de ese tramo no evaluable.
+**Recomendación: C.** Es la única forma sin trampa: la lista de "esta semana" se produce con el mismo criterio, y el informe dice explícitamente que ese último tramo no se puede evaluar todavía. Las 5 fallas con parada (H-16) caen entre el 09/02 y el 27/02: la de EQ-209 (27/02) ocurre en la última semana, pero igual se puede evaluar: los cortes del 20/02 al 23/02 la tienen dentro de su ventana de 2 a 7 días y sí cuentan con futuro completo. Lo que no se puede evaluar son los cortes posteriores al 23/02.
 
 ## H-16 · Fallas reales y su descripción
 
