@@ -66,3 +66,10 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Qué descarté y por qué:** 1 día (infla el número con avisos que no sirven en la práctica); 3 días o más (con pocas fallas casi nada contaría).
 - **Consecuencia:** el resultado del backtest se ve peor, pero es más honesto con una jefa que ya desconfía de las alertas.
 - **Evidencia:** razonamiento operativo; sin dato del cliente sobre tiempos reales de respuesta. Pendiente de confirmar.
+
+## D-09 · Ingesta: unir los formatos por nombre y fallar si aparece un encabezado desconocido
+- **Contexto:** las lecturas llegan en dos formatos con encabezados distintos (`equipment_id, ts, vibracion_mm_s, temperatura_c` hasta el 10/02; `asset_id, timestamp, vibration_mm_s, temp, unidad_temp` desde el 11/02). El cliente no documentó el cambio y el mes que viene podría traer un tercer formato.
+- **Qué decidí:** leer todos los archivos con `union_by_name`, unificar las columnas con `coalesce` y **detener la ingesta con un error claro** si algún archivo trae un encabezado fuera de los dos conocidos.
+- **Qué descarté y por qué:** (A) solo `coalesce`, sin verificación: un formato nuevo produciría NULL en silencio y señales inventadas o vacías, lo que R4 prohíbe; (B) un lector separado por formato: más código para el mismo resultado.
+- **Consecuencia:** un formato nuevo frena el pipeline con un mensaje, y la skill de "leer un drop" (R10) tiene que explicar cómo agregar el mapeo.
+- **Evidencia:** `docs/perfilado.md`, H-01 (10 archivos viejos y 20 nuevos, corte el 11/02, 115.065 filas) y la tabla de encabezados de la sección de preparación.
