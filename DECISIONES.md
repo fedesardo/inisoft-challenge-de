@@ -131,3 +131,10 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Qué descarté y por qué:** descartar en silencio (pierde fallas sin avisar); detener el pipeline si hay huérfanos (un ID mal escrito en una OT no justifica frenar todo).
 - **Consecuencia:** hoy el segundo punto no se activa (0 huérfanos); queda como regla para drops futuros. Riesgo: si la OT descartada era una falla, desaparece del backtest, por eso el reporte es obligatorio.
 - **Evidencia:** `docs/perfilado.md`, H-13 (69 de 86 cruzan crudo; 86 de 86 normalizado).
+
+## D-18 · OT: normalizar los tipos y no usar el tipo, por sí solo, para decidir qué es una falla
+- **Contexto:** el campo `tipo` de las 86 OT tiene 5 valores para 3 conceptos: `PREV` (42), `Preventivo` (19), `Correctivo` (4), `CORR` (1) y vacío (20, el 23 %). El cliente avisó que "no siempre ponen el tipo".
+- **Qué decidí:** mapear los sinónimos (`PREV` y `Preventivo` a preventivo; `CORR` y `Correctivo` a correctivo; vacío a "sin tipo"), con el resultado 61 preventivas, 5 correctivas y 20 sin tipo. El tipo normalizado no se usa por sí solo para decidir qué es una falla; esa regla se define aparte (H-16).
+- **Qué descarté y por qué:** tratar "sin tipo" como preventivo o como correctivo: no hay base para ninguna de las dos; dejarlo como categoría propia no inventa información.
+- **Consecuencia:** el tipo queda disponible como dato normalizado, pero la regla de falla se apoya también en la descripción (ver H-16). La regla de falla sigue siendo un pendiente de R3 hasta cerrar H-16.
+- **Evidencia:** `docs/perfilado.md`, H-14 y H-16 (con la regla "falla = correctivo" se pierden 2 de las 5 fallas con parada y se suma 1 que no lo es).
