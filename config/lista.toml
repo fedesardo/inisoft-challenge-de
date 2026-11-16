@@ -1,8 +1,14 @@
-# Parámetros de la lista de cierre (D-30). Se aplican sobre la regla principal del backtest.
+# Parámetros de la lista de cierre (D-30) y de la regla complementaria de sobre-umbral (D-31).
 
 [lista]
 dias_recientes = 3      # entra el equipo con un episodio de alerta cuyo último día cae en los últimos 3 días de datos
-max_equipos = 5         # D-04: la lista no pasa de 5 equipos
+max_equipos = 5         # D-04: la lista de P1 no pasa de 5 equipos
 
 [sin_datos]
 horas_sin_lecturas = 24 # sin ninguna lectura en las 24 h previas al cierre => "sin datos", no alerta
+
+# Regla complementaria (id SU en el backtest): mediana diaria de vibración sobre el umbral del fabricante.
+# Agregada después de ver el caso EQ-115 (D-31). Misma ventana de "activa" que la lista: [lista].dias_recientes.
+[sobre_umbral]
+dias_seguidos = 2       # días seguidos con la mediana diaria sobre el umbral
+max_equipos = 5         # tope de la sección sobre-umbral.csv

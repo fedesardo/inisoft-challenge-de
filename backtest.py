@@ -19,7 +19,7 @@ from pipeline import RAIZ, SALIDA, ejecutar_test, guardar_corridas, sentencias
 
 SQL = RAIZ / "sql" / "backtest"
 TESTS = RAIZ / "tests" / "backtest"
-REGLAS = ("normal.sql", "regla_propia.sql", "regla_fabricante.sql")
+REGLAS = ("normal.sql", "regla_propia.sql", "regla_fabricante.sql", "regla_sobre_umbral.sql")
 
 
 def correr(con, nombre):
@@ -50,7 +50,7 @@ def coma(x, dec=2):
     return f"{x:.{dec}f}".replace(".", ",") if isinstance(x, float) and x != int(x) else str(int(x))
 
 
-def informe(con, cfg, primer_dia, ultimo_dia, fin_datos, n_dias):
+def informe(con, cfg, primer_dia, ultimo_dia, fin_datos, n_dias, dias_su):
     cab = ("regla", "fallas_anticipadas_2d", "fallas_con_episodio_7d", "falsas_alarmas",
            "falsas_alarmas_por_semana", "anticipacion_mediana_dias_2d")
     res = con.execute("SELECT * FROM bt_resumen ORDER BY orden").fetchall()
@@ -62,6 +62,8 @@ def informe(con, cfg, primer_dia, ultimo_dia, fin_datos, n_dias):
     def nombre(f):
         if f["combo_id"] == "FAB":
             return "Umbral del fabricante (una lectura)"
+        if f["combo_id"] == "SU":
+            return f"Sobre umbral (SU): mediana diaria de vibración sobre el umbral {dias_su} días seguidos"
         return f"Propia {f['combo_id']}: {coma(f['k'])} × normal, {f['lecturas_seguidas']} lecturas seguidas"
 
     def resumen(f):
@@ -124,6 +126,7 @@ def main():
     horizonte, ant_min = cfg["evaluacion"]["horizonte_dias"], cfg["evaluacion"]["anticipacion_minima_dias"]
     combos = cfg["combinaciones"]
     principal = next(c["id"] for c in combos if c.get("principal"))
+    dias_su = tomllib.loads((RAIZ / "config" / "lista.toml").read_text())["sobre_umbral"]["dias_seguidos"]
 
     base = SALIDA / "backtest.duckdb"
     for sobrante in (base, SALIDA / "backtest.duckdb.wal"):
@@ -138,7 +141,7 @@ def main():
     dias = [primer_dia + timedelta(days=i) for i in range((ultimo - primer_dia).days + 1)]
 
     fijar(con, dias_ventana=ventana, dias_minimos=dias_min, horizonte=horizonte, ant_min=ant_min,
-          primer_dia=primer_dia, fin_datos=fin_datos)
+          primer_dia=primer_dia, fin_datos=fin_datos, dias_seguidos=dias_su)
     registros, id_corrida = [], datetime.now().isoformat(timespec="seconds")
     drop = os.environ.get("DROP_DIR") or "drop/"
 
@@ -153,6 +156,7 @@ def main():
     for i, c in enumerate(combos, 1):
         con.execute("INSERT INTO bt_combos VALUES (?, ?, 'propia', ?, ?)", [i, c["id"], float(c["k"]), c["lecturas"]])
     con.execute("INSERT INTO bt_combos VALUES (?, 'FAB', 'fabricante', NULL, NULL)", [len(combos) + 1])
+    con.execute("INSERT INTO bt_combos VALUES (?, 'SU', 'sobre_umbral', NULL, NULL)", [len(combos) + 2])
 
     for dia in dias:  # un día a la vez: cada vuelta solo ve datos con fecha < dia + 1
         fijar(con, dia=dia, corte=dia + timedelta(days=1))
@@ -162,6 +166,8 @@ def main():
             fijar(con, combo_id=c["id"], k=float(c["k"]), n_min=c["lecturas"])
             correr(con, "regla_propia.sql")
         correr(con, "regla_fabricante.sql")
+        fijar(con, combo_id="SU")
+        correr(con, "regla_sobre_umbral.sql")
     correr(con, "episodios.sql")
     correr(con, "metricas.sql")
     filas = con.execute("SELECT count(*) FROM bt_alertas").fetchone()[0]
@@ -191,7 +197,7 @@ def main():
                 "FROM bt_fallas ORDER BY orden, fecha_falla, equipment_id) TO 'salida/backtest-fallas.csv' (FORMAT csv, HEADER)")
     con.execute("COPY (SELECT combo_id, equipment_id, primer_dia, ultimo_dia, dias_alerta, inicio, falla, anticipacion_dias, clase "
                 "FROM bt_episodios ORDER BY combo_id, equipment_id, primer_dia) TO 'salida/backtest-episodios.csv' (FORMAT csv, HEADER)")
-    informe(con, {"principal": principal, "dias_ventana": ventana}, primer_dia, ultimo, fin_datos, len(dias))
+    informe(con, {"principal": principal, "dias_ventana": ventana}, primer_dia, ultimo, fin_datos, len(dias), dias_su)
     print("\nOK: backtest en salida/backtest.csv, backtest-fallas.csv, backtest-episodios.csv y backtest.md")
 
 

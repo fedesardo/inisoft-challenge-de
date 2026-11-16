@@ -5,7 +5,9 @@
 Entra a la lista el equipo con un episodio de la regla principal del backtest cuyo último día de alerta
 cae en los últimos N días de datos (config/lista.toml). Se ordena por cuántas veces su señal más
 desviada supera su normal. Los equipos sin lecturas recientes van aparte en salida/sin-datos.csv.
-Escribe salida/lista.csv y salida/sin-datos.csv. Sin red ni LLM.
+Además, en salida/sobre-umbral.csv, la regla complementaria SU (D-31): mediana diaria de vibración
+sobre el umbral del fabricante varios días seguidos. Escribe salida/lista.csv, salida/sobre-umbral.csv
+y salida/sin-datos.csv. Sin red ni LLM.
 """
 import os
 import sys
@@ -31,6 +33,13 @@ def frase(senal, desde, normal, actual, veces):
             f"hoy {coma(round(actual, dec), dec)} {unidad} contra {coma(round(normal, dec), dec)} {unidad} habituales.")
 
 
+def frase_su(dias, desde, ultimo, mediana, umbral, veces):
+    """Una racha sobre el umbral del fabricante, en palabras simples."""
+    return (f"Vibración por encima del umbral del fabricante {dias} días seguidos, desde el {desde:%d/%m}: "
+            f"mediana del {ultimo:%d/%m} de {coma(round(mediana, 3), 3)} mm/s contra un umbral de {coma(umbral, 1)} mm/s "
+            f"({coma(round(veces, 1), 1)} veces el umbral).")
+
+
 def main():
     for f in ("limpieza.duckdb", "backtest.duckdb"):
         if not (SALIDA / f).is_file():
@@ -42,7 +51,7 @@ def main():
     max_equipos = cfg["lista"]["max_equipos"]
 
     # Se borra lo anterior: si algo falla, no queda una lista vieja que parezca vigente.
-    for f in ("lista.csv", "sin-datos.csv"):
+    for f in ("lista.csv", "sobre-umbral.csv", "sin-datos.csv"):
         (SALIDA / f).unlink(missing_ok=True)
 
     con = duckdb.connect(str(SALIDA / "backtest.duckdb"))
@@ -51,7 +60,8 @@ def main():
     cierre = con.execute("SELECT max(ts) FROM limp.lecturas").fetchone()[0]
     fijar(con, combo_id=principal["id"], k=float(principal["k"]), cierre=cierre,
           dias_recientes=cfg["lista"]["dias_recientes"], horas_sin_lecturas=cfg["sin_datos"]["horas_sin_lecturas"],
-          max_equipos=max_equipos)
+          max_equipos=max_equipos, dias_seguidos=cfg["sobre_umbral"]["dias_seguidos"],
+          max_equipos_su=cfg["sobre_umbral"]["max_equipos"])
 
     registros, id_corrida = [], datetime.now().isoformat(timespec="seconds")
     drop = os.environ.get("DROP_DIR") or "drop/"
@@ -85,8 +95,28 @@ def main():
                 "senal VARCHAR, desde DATE, veces_sobre_normal DOUBLE, valor_actual DOUBLE, normal DOUBLE, razon VARCHAR)")
     for puesto, (_, *resto) in enumerate(filas, 1):
         con.execute("INSERT INTO lista_final VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [puesto, *resto])
-    registrar("sql", "sql/lista/lista.sql", "ok", len(filas), inicio)
-    print(f"[   ok] sql/lista: {len(filas)} equipos en la lista, {con.execute('SELECT count(*) FROM sin_datos').fetchone()[0]} sin datos")
+
+    # Sección SU: una fila por equipo, de mayor a menor veces sobre el umbral.
+    su = []
+    for equipo, desde, ultimo, dias, mediana, umbral in con.execute(
+            "SELECT equipo, desde, ultimo_dia, dias_seguidos, mediana_ultimo_dia, umbral FROM su_episodios").fetchall():
+        veces = round(mediana / umbral, 2)
+        su.append((-veces, equipo, maestro[equipo][0], maestro[equipo][1], dias, desde, ultimo, round(mediana, 4), umbral, veces,
+                   frase_su(dias, desde, ultimo, mediana, umbral, mediana / umbral)))
+    su.sort()
+    total_su = len(su)
+    su = su[:cfg["sobre_umbral"]["max_equipos"]]
+    con.execute("CREATE OR REPLACE TABLE su_final (puesto INTEGER, equipo VARCHAR, tipo VARCHAR, planta VARCHAR, "
+                "dias_seguidos INTEGER, desde DATE, ultimo_dia DATE, mediana_ultimo_dia DOUBLE, umbral DOUBLE, "
+                "veces_sobre_umbral DOUBLE, razon VARCHAR)")
+    for puesto, (_, *resto) in enumerate(su, 1):
+        con.execute("INSERT INTO su_final VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [puesto, *resto])
+
+    registrar("sql", "sql/lista/lista.sql", "ok", len(filas) + len(su), inicio)
+    print(f"[   ok] sql/lista: {len(filas)} equipos en la lista, {len(su)} en sobre-umbral, "
+          f"{con.execute('SELECT count(*) FROM sin_datos').fetchone()[0]} sin datos")
+    if total_su > len(su):
+        print(f"AVISO: hay {total_su} equipos sobre el umbral y la sección se recorta a {len(su)}.")
     if total_activos > max_equipos:
         print(f"AVISO: hay {total_activos} episodios activos y la lista se recorta a {max_equipos} (D-04).")
 
@@ -107,12 +137,13 @@ def main():
 
     con.execute("COPY (SELECT puesto, equipo, tipo, planta, senal, desde, veces_sobre_normal, round(valor_actual, 4) AS valor_actual, round(normal, 4) AS normal, razon "
                 "FROM lista_final ORDER BY puesto) TO 'salida/lista.csv' (FORMAT csv, HEADER)")
+    con.execute("COPY (SELECT * FROM su_final ORDER BY puesto) TO 'salida/sobre-umbral.csv' (FORMAT csv, HEADER)")
     con.execute("COPY (SELECT equipo, tipo, planta, ultima_lectura, horas_sin_lecturas, "
                 "CASE WHEN ultima_lectura IS NULL THEN 'Sin lecturas en todo el drop. No es una alerta: no hay con qué evaluarlo.' "
                 "ELSE 'Sin lecturas hace ' || horas_sin_lecturas || ' horas (la última fue el ' || strftime(ultima_lectura, '%d/%m %H:%M') "
                 "|| '). No es una alerta: no hay con qué evaluarlo.' END AS razon "
                 "FROM sin_datos ORDER BY horas_sin_lecturas DESC NULLS FIRST, equipo) TO 'salida/sin-datos.csv' (FORMAT csv, HEADER)")
-    print("\nOK: lista en salida/lista.csv y equipos sin datos en salida/sin-datos.csv")
+    print("\nOK: salida/lista.csv, salida/sobre-umbral.csv y salida/sin-datos.csv")
 
 
 if __name__ == "__main__":

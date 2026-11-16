@@ -7,7 +7,7 @@ Objetivo: qué equipos mandar a mantenimiento esta semana, con evidencia (backte
 - Python 3.12 con uv (`uv run ...`). DuckDB con SQL para todo el procesamiento; pandas y plotly solo de apoyo y para el dashboard.
 
 ## Comando
-- `make run` (o sin make: `uv run python pipeline.py`) regenera todo `salida/` desde cero: limpieza, backtest y `salida/lista.csv`. `make run DROP=otra/carpeta` procesa otro drop.
+- `make run` (o sin make: `uv run python pipeline.py`) regenera todo `salida/` desde cero: limpieza, backtest `salida/lista.csv` y `salida/sobre-umbral.csv`. `make run DROP=otra/carpeta` procesa otro drop.
 
 ## Reglas
 - `drop/` es de solo lectura: son los datos crudos del cliente. Nunca se modifican; todo lo derivado va a `salida/`.

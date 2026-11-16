@@ -44,3 +44,24 @@ SELECT s.equipo, s.senal, s.desde,
 FROM s
 JOIN bt_normales n ON n.equipment_id = s.equipo AND n.dia = s.desde
 JOIN actual a ON a.equipment_id = s.equipo;
+
+-- Sección aparte (D-31): episodios de la regla SU (mediana diaria de vibración sobre el umbral del
+-- fabricante, dias_seguidos días seguidos) cuyo último día de alerta cae en los últimos dias_recientes
+-- días de datos. Una racha de N días sobre el umbral da alertas desde su día N: la racha empieza
+-- dias_seguidos - 1 días antes del primer día de alerta.
+CREATE OR REPLACE TABLE su_episodios AS
+WITH x AS (
+    SELECT e.equipment_id AS equipo,
+           e.primer_dia - CAST(getvariable('dias_seguidos') - 1 AS INTEGER) AS desde,
+           e.ultimo_dia,
+           e.dias_alerta + CAST(getvariable('dias_seguidos') - 1 AS INTEGER) AS dias_seguidos
+    FROM bt_episodios e
+    WHERE e.combo_id = 'SU'
+      AND e.ultimo_dia >= CAST(getvariable('cierre') AS DATE) - CAST(getvariable('dias_recientes') - 1 AS INTEGER)
+      AND e.equipment_id NOT IN (SELECT equipo FROM sin_datos)
+)
+SELECT x.equipo, x.desde, x.ultimo_dia, x.dias_seguidos,
+       (SELECT median(l.vib_mm_s) FROM limp.lecturas l
+         WHERE l.equipment_id = x.equipo AND CAST(l.ts AS DATE) = x.ultimo_dia) AS mediana_ultimo_dia,
+       q.umbral_vib_mm_s AS umbral
+FROM x JOIN limp.equipos q ON q.equipment_id = x.equipo;
