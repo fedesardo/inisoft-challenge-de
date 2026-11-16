@@ -735,7 +735,7 @@ Nada de esto está decidido; son mis recomendaciones para que las revises. Al co
 | H-07 | Desfase de 3 h | **Decidido (D-13):** no corregir; desfase configurable (0 por defecto); pregunta enviada al cliente, respuesta pendiente |
 | H-08 | Huecos | **Decidido (D-14):** no imputar; aviso "sin telemetría reciente" (falta definir cuántas horas de silencio) |
 | H-09 | Tolerancia de R4(c) | **Decidido (D-15):** ±0,5 % sobre la mediana de los cambios entre equipos; reportar los equipos que cambian más |
-| H-10 | Sensores sospechosos | **Detectarlos** y tratarlos como motivo de revisión propio |
+| H-10 | Sensores sospechosos | **Decidido (D-16):** detectarlos y tratarlos como motivo de revisión propio (falta definir la regla y su lugar en la lista de 5) |
 | H-12 | Umbral del fabricante | Usarlo **solo como referencia ingenua** en el backtest |
 | H-13 | IDs de OT que no cruzan | Normalizar siempre y **reportar** los huérfanos |
 | H-14 | Tipos de OT | Mapear sinónimos, **sin** usar el tipo para decidir fallas |
