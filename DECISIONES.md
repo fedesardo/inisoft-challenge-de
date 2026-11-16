@@ -138,3 +138,10 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Qué descarté y por qué:** tratar "sin tipo" como preventivo o como correctivo: no hay base para ninguna de las dos; dejarlo como categoría propia no inventa información.
 - **Consecuencia:** el tipo queda disponible como dato normalizado, pero la regla de falla se apoya también en la descripción (ver H-16). La regla de falla sigue siendo un pendiente de R3 hasta cerrar H-16.
 - **Evidencia:** `docs/perfilado.md`, H-14 y H-16 (con la regla "falla = correctivo" se pierden 2 de las 5 fallas con parada y se suma 1 que no lo es).
+
+## D-19 · Backtest: solo se evalúan los cortes con 7 días de futuro completo; la lista final se calcula igual, sin evaluación propia
+- **Contexto:** el backtest califica, para cada día de corte, si un equipo de la lista falla entre 2 y 7 días después (D-08). Los datos terminan el 02/03 a las 23:45. Un corte posterior al 23/02 tiene una ventana que se pasa del final de los datos, y no se puede saber si un equipo marcado que no falló hasta el 02/03 fallará después. De las 86 OT, 25 caen en los últimos 7 días.
+- **Qué decidí:** (1) el backtest usa solo los cortes del 01/02 al 23/02, los que tienen 7 días de futuro completo; (2) la lista de "esta semana" se calcula igualmente al cierre de los datos (02/03 23:45) con el mismo criterio, y el informe dice explícitamente que esa lista todavía no se puede evaluar.
+- **Qué descarté y por qué:** evaluar todos los cortes hasta el último día (los cortes tardíos contarían falsas alarmas y fallas perdidas que no se pueden saber); no calcular la lista final (se pierde justo lo que pidió la jefa: qué equipos mandar esta semana).
+- **Consecuencia:** el resultado del backtest es limpio pero se apoya en menos cortes (23 días). La lista final no tiene evaluación propia: su respaldo es la evidencia de los cortes anteriores. La falla de EQ-209 (27/02) sí se puede evaluar: los cortes del 20/02 al 23/02 la tienen dentro de su ventana y cuentan con futuro completo. Con solo 5 fallas el resultado es evidencia modesta (D-05).
+- **Evidencia:** `docs/perfilado.md`, H-15 y H-16.
