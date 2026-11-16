@@ -7,11 +7,14 @@ quedan registrados como `no_corrio`.
   uv run --locked python pipeline.py              # lee drop/
   DROP_DIR=/ruta/a/otro/drop uv run --locked python pipeline.py
 
+Después de la limpieza corre el backtest (backtest.py) y la lista de cierre (lista.py): un solo
+comando regenera todo. Empieza borrando salida/ (menos el historial corridas.csv, D-25).
 Lee DROP_DIR en solo lectura. Escribe solo en salida/. Sin red ni LLM.
 """
 import csv
 import os
 import re
+import shutil
 import sys
 import time
 from datetime import datetime
@@ -100,9 +103,10 @@ def main():
 
     os.chdir(RAIZ)  # las rutas de salida en sql/07 son relativas a la raíz del repo
     SALIDA.mkdir(exist_ok=True)
+    for viejo in SALIDA.iterdir():  # todo se regenera desde cero; solo sobrevive el historial de corridas
+        if viejo.name != "corridas.csv":
+            shutil.rmtree(viejo) if viejo.is_dir() else viejo.unlink()
     base = SALIDA / "limpieza.duckdb"
-    for sobrante in (base, SALIDA / "limpieza.duckdb.wal"):
-        sobrante.unlink(missing_ok=True)
 
     con = duckdb.connect(str(base))
     con.execute("SET threads=1")  # un solo hilo: el orden de filas empatadas es repetible
@@ -152,7 +156,14 @@ def main():
         sys.exit(1)
 
     imprimir_auditoria(con)
-    print(f"\nOK: {len(plan)} pasos y tests. Salidas en salida/")
+    print(f"\nOK: {len(plan)} pasos y tests de la limpieza.")
+    con.close()  # backtest y lista abren limpieza.duckdb en solo lectura
+
+    import backtest, lista  # acá y no arriba: ambos importan este módulo
+    print("\n== Backtest ==")
+    backtest.main()
+    print("\n== Lista de cierre ==")
+    lista.main()
 
 
 if __name__ == "__main__":

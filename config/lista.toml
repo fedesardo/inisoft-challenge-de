@@ -1,0 +1,8 @@
+# Parámetros de la lista de cierre (D-30). Se aplican sobre la regla principal del backtest.
+
+[lista]
+dias_recientes = 3      # entra el equipo con un episodio de alerta cuyo último día cae en los últimos 3 días de datos
+max_equipos = 5         # D-04: la lista no pasa de 5 equipos
+
+[sin_datos]
+horas_sin_lecturas = 24 # sin ninguna lectura en las 24 h previas al cierre => "sin datos", no alerta
