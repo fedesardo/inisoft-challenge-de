@@ -159,3 +159,28 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Qué descarté y por qué:** usar el umbral como criterio único (hereda la fatiga de alertas y no distingue entre equipos del mismo tipo); ignorarlo (sin él no hay referencia contra la cual mostrar que el criterio propio mejora).
 - **Consecuencia:** el backtest compara el criterio propio contra dos referencias: elegir 5 equipos al azar y esta alerta por umbral. El criterio mínimo propuesto en SPEC R6 es superar al azar y generar menos falsas alarmas que la alerta ingenua. El diseño del criterio propio queda abierto para el paso siguiente.
 - **Evidencia:** `docs/perfilado.md`, H-11 y H-12.
+
+## D-22 · Filas ilegibles: se descartan con motivo y se cuentan, no frenan el pipeline
+- **Contexto:** una lectura puede traer un timestamp o un número que no se puede leer (hoy hay 0, H-05). R4(a) las llama "inválidas descartadas".
+- **Qué decidí:** descartarlas con un motivo (`ts_invalido`, `valor_no_numerico`), contarlas en la auditoría y listarlas en `salida/descartes.csv`.
+- **Qué descarté y por qué:** frenar el pipeline ante cualquier fila rota: un solo dato malo bloquearía el procesamiento de todo el mes.
+- **Consecuencia:** si un drop futuro trae muchas filas ilegibles, solo se nota mirando la auditoría. El test de cuadre garantiza que ninguna desaparezca sin quedar contada.
+- **Evidencia:** `sql/03_lecturas_unificadas.sql`, `tests/06_cuadre.sql`; `docs/perfilado.md`, H-05.
+
+## D-23 · Test de temperatura: rango válido de 0 a 120 °C
+- **Contexto:** tras convertir °F, hace falta un control que atrape una conversión que haya fallado.
+- **Qué decidí:** `tests/04_temp_c_en_rango.sql` devuelve las lecturas fuera de [0, 120] °C. El 120 queda por encima del máximo real del mes (95,8 °C) y del umbral más alto del maestro (110 °C, turbina), y por debajo del menor valor en °F sin convertir observado (126,7). El 0 es el piso físico para equipos en operación (el mínimo real es 52,6 °C).
+- **Qué descarté y por qué:** techo de 150 (dejaría pasar °F sin convertir entre 126 y 150); techo de 110 (podría frenar el pipeline por una turbina recalentada real).
+- **Consecuencia:** un equipo que opere a menos de 49 °C y llegue sin convertir quedaría bajo 120 y no se detectaría. Los límites de 0 y 120 son una asunción propia, a revisar con más meses.
+- **Evidencia:** `docs/perfilado.md`, H-04 y H-12.
+
+## D-24 · Salidas de la limpieza
+- **Qué decidí:** `salida/limpieza.duckdb` más `lecturas.parquet`, `equipos.parquet`, `ot.parquet`, `auditoria.csv` y `descartes.csv`. Los tests y pasos SQL viven en `sql/` y `tests/`, con el mismo número de paso.
+- **Consecuencia:** DuckDB lee parquet directo (R11); el parquet no se abre a ojo, por eso la auditoría y los descartes van en CSV.
+
+## D-25 · Historial de corridas para observabilidad
+- **Contexto:** hace falta saber qué corrió, qué falló y dónde se cortó el pipeline.
+- **Qué decidí:** `salida/corridas.csv` se acumula (no se reescribe) con una fila por paso y por test en cada corrida: `id_corrida, drop_dir, orden, tipo, nombre, estado (ok|fallo|error|no_corrio), filas, duracion_s, mensaje`. Los pasos posteriores a un corte quedan como `no_corrio`.
+- **Qué descarté y por qué:** construir un tablero ahora: con una corrida por mes, una tabla de 14 filas alcanza. Un tablero propio tiene sentido con corridas diarias o con 500 equipos (ver "Escalado"), y se arma sobre este CSV.
+- **Consecuencia:** el historial vive en `salida/`, así que `make clean` lo borra. No avisa solo: alguien tiene que mirarlo.
+- **Evidencia:** `pipeline.py`; probado con drops rotos (unidad `K` y encabezado renombrado cortan en su test; un error interno de deduplicación corta en el cuadre).
