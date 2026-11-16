@@ -324,7 +324,7 @@ SELECT count(*) FROM l WHERE unidad_temp='F' AND (TRY_CAST(temp_txt AS DOUBLE)-3
 | C. Descartar las filas °F | Sin riesgo de conversión | Pierde el 14,9 % del sistema nuevo y deja huecos |
 | D. A, más una **verificación** que avise si una fila marcada °C vale más de 100, o °F menos de 100 | Detecta unidades mal etiquetadas | Un poco más de código |
 
-**Recomendación: D** (A con salvaguarda). La unidad declarada es la fuente de verdad, y la verificación atrapa el caso de "el proveedor etiquetó mal". El sistema viejo se asume en °C, y eso se escribe como asunción. La salvaguarda no se activa con los datos de hoy una vez excluido `EQ-TEST-01`. Atención: el valor de corte de esa verificación todavía hay que fijarlo con criterio. El máximo real del mes es 95,8 °C, así que un corte de 100 °C (el de la sonda exploratoria de H-06) queda muy ajustado; conviene atarlo al umbral de cada tipo de equipo (85, 95 o 110 °C) y no a un número redondo.
+**Decisión (D-12): A más un control de unidades válidas.** Se convierte fila por fila según `unidad_temp`, y si aparece una unidad que no sea `C` ni `F` el pipeline se detiene con un error claro. El sistema viejo (sin columna de unidad) se asume en °C, y eso se escribe como asunción. Se descartó la verificación de rangos de la opción D por ser compleja y no activarse nunca con los datos de hoy: exigía fijar un corte por tipo de equipo, y el máximo real del mes (95,8 °C) deja poco margen para un corte redondo. Los rangos de temperatura quedan visibles en el informe de perfilado para que una persona los revise cada mes. Límite conocido: una etiqueta equivocada (una fila marcada `C` que en verdad es `F`) no se detectaría automáticamente; no hay evidencia de que ocurra.
 
 ## H-07 · Desfase horario de ~3 horas entre sistemas (hipótesis)
 
@@ -730,7 +730,7 @@ Nada de esto está decidido; son mis recomendaciones para que las revises. Al co
 |---|---|---|
 | H-01 | Unificar los dos formatos | Mapear por nombre y **fallar si aparece un encabezado desconocido** |
 | H-03 | Qué fila queda de cada par conflictivo | La de **mayor vibración** (determinista, conservadora, sin inventar) |
-| H-04 | Conversión de °F | Convertir según `unidad_temp`, con **verificación** de coherencia |
+| H-04 | Conversión de °F | **Decidido (D-12):** convertir según `unidad_temp` y fallar si la unidad no es `C` ni `F` |
 | H-06 | Equipos extraños | **Lista blanca**: solo IDs del maestro; reportar lo descartado |
 | H-07 | Desfase de 3 h | **No corregir**, dejarlo configurable, y **preguntar** al cliente |
 | H-08 | Huecos | **No imputar**; avisar "sin telemetría reciente" |
