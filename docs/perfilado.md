@@ -739,7 +739,7 @@ Nada de esto está decidido; son mis recomendaciones para que las revises. Al co
 | H-08 | Huecos | **Decidido (D-14):** no imputar; aviso "sin telemetría reciente" (falta definir cuántas horas de silencio) |
 | H-09 | Tolerancia de R4(c) | **Decidido (D-15):** ±0,5 % sobre la mediana de los cambios entre equipos; reportar los equipos que cambian más |
 | H-10 | Sensores sospechosos | **Decidido (D-16):** detectarlos y tratarlos como motivo de revisión propio (falta definir la regla y su lugar en la lista de 5) |
-| H-12 | Umbral del fabricante | Usarlo **solo como referencia ingenua** en el backtest |
+| H-12 | Umbral del fabricante | **Decidido (D-21):** usarlo solo como alerta de referencia ingenua en el backtest |
 | H-13 | IDs de OT que no cruzan | **Decidido (D-17):** normalizar siempre; descartar y reportar los que sigan sin cruzar |
 | H-14 | Tipos de OT | **Decidido (D-18):** mapear sinónimos (61 preventivas, 5 correctivas, 20 sin tipo) y no usar el tipo solo para decidir fallas |
 | H-15 | Cortes del backtest | **Decidido (D-19):** evaluar solo los cortes hasta el 23/02; la lista final se calcula igual, sin evaluación |
