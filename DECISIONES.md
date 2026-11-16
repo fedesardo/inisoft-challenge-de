@@ -210,3 +210,22 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Qué descarté y por qué:** elegir la combinación después de mirar (con 5 fallas sería sobreajuste); evaluar rachas que cruzan la medianoche (más complejo, sin evidencia de que haga falta).
 - **Consecuencia:** el resultado es evidencia modesta (5 fallas, cortes solapados). Falta la referencia de 5 equipos al azar (R6). El backtest corre con `make run` y sus tests se registran en `salida/corridas.csv`.
 - **Evidencia:** `salida/backtest.md`: principal 2 de 5 (≥ 2 días) y 3 de 5 (en 7 días), 0 falsas alarmas; umbral del fabricante 0 de 5, 2 de 5 y 21 falsas alarmas (9,19 por semana).
+
+## D-29 · El acierto de EQ-209 en el backtest es sólido frente al ruido, con tres límites declarados
+- **Contexto:** el normal de EQ-209 el día de su alerta (23/02) es 0,087 mm/s, el nivel casi cero del sensor VX-200 instalado el 14/02 (D-16). Con un nivel tan bajo, una subida de 0,08 a ~0,12 mm/s podía ser ruido o deriva del sensor y no una degradación.
+- **Qué decidí:** mirar la vibración diaria de EQ-209 antes de contar el acierto como confiable, y registrar el veredicto. Veredicto: **sólido frente al ruido**.
+- **Evidencia (mediana y máximo diarios en mm/s, `salida/limpieza.duckdb`):**
+
+| día | mediana | máximo | | día | mediana | máximo |
+|---|---|---|---|---|---|---|
+| 15/02 | 0,081 | 0,086 | | 22/02 | 0,094 | 0,104 |
+| 16/02 | 0,081 | 0,086 | | **23/02** | **0,108** | **0,123** |
+| 17/02 | 0,081 | 0,085 | | 24/02 | 0,126 | 0,140 |
+| 18/02 | 0,081 | 0,087 | | 25/02 | 0,150 | 0,492 |
+| 19/02 | 0,081 | 0,087 | | 26/02 | 0,178 | 0,683 |
+| 20/02 | 0,082 | 0,087 | | 27/02 | 0,198 | 0,210 |
+| 21/02 | 0,086 | 0,093 | | | | |
+
+  Del 15 al 20/02 la mediana es constante (0,081) y el máximo nunca pasa de 0,087 (desvío diario 0,0021 a 0,0025). Desde el 21/02 la mediana sube todos los días sin retroceder y casi se triplica hasta la falla (0,086 → 0,198). El mínimo del 23/02 (0,097) ya supera el máximo de todos los días de ruido (0,087). El 14/02 aparece mediana 1,981 porque el día mezcla el sensor viejo y el nuevo (cambio de sensor).
+- **Límites declarados:** (1) es un solo caso: 2 de 5 aciertos con la regla principal, y el 27/02 es el único con falla evaluable con esta señal. (2) La escala del VX-200 no está validada (pregunta abierta al cliente en D-16): no sabemos si 0,2 mm/s es un valor de operación normal o de alarma para ese sensor, y 1,3 × 0,087 equivale a solo 0,03 mm/s en valor absoluto. (3) El normal sube con la propia tendencia (la ventana incluye los días de subida), lo que hace al criterio menos sensible a medida que la degradación avanza; el 21/02 y el 22/02 no alertaron porque la mediana seguía bajo 1,3 × el normal (1,06 y 1,16 veces).
+- **Consecuencia:** el acierto de EQ-209 se informa tal cual (anticipación 3 días), con esta nota. No cambia ninguna regla ni ningún número del backtest. La regla de sensor sospechoso (D-16) sigue pendiente.
