@@ -73,3 +73,10 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Qué descarté y por qué:** (A) solo `coalesce`, sin verificación: un formato nuevo produciría NULL en silencio y señales inventadas o vacías, lo que R4 prohíbe; (B) un lector separado por formato: más código para el mismo resultado.
 - **Consecuencia:** un formato nuevo frena el pipeline con un mensaje, y la skill de "leer un drop" (R10) tiene que explicar cómo agregar el mapeo.
 - **Evidencia:** `docs/perfilado.md`, H-01 (10 archivos viejos y 20 nuevos, corte el 11/02, 115.065 filas) y la tabla de encabezados de la sección de preparación.
+
+## D-10 · Duplicados: de cada par conflictivo se conserva la lectura de mayor vibración
+- **Contexto:** el sistema viejo repite lecturas (misma clave equipo + timestamp). Son 229 pares, todos de exactamente 2 filas; solo 5 son idénticos y en 224 cambia la vibración (diferencia máxima 0,051 mm/s, mediana 0,014). La temperatura es igual en las dos copias de todos los pares. El sistema nuevo no tiene duplicados.
+- **Qué decidí:** conservar, por cada clave repetida, la fila con mayor vibración (la temperatura es la misma). Las filas descartadas se cuentan para el cuadre de R4(a). En los 5 pares idénticos da igual cuál quede.
+- **Qué descarté y por qué:** la primera fila (depende del orden de lectura y no es robusta); el promedio (inventa un valor que no está en el dato crudo, lo que R4 prohíbe); la de menor vibración (podría ocultar un pico real).
+- **Consecuencia:** el criterio es determinista (dos corridas dan el mismo resultado, R1) y conservador: ante la duda no oculta una señal. Introduce un sesgo hacia arriba de hasta 0,051 mm/s, menos del 2 % del umbral más bajo (2,8 mm/s en turbinas).
+- **Evidencia:** `docs/perfilado.md`, H-03.
