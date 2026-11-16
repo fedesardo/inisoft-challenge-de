@@ -20,7 +20,7 @@
 **R3. Perfilado de los datos, generado por el pipeline**
 - *Por qué importa:* no hay diccionario de datos; todas las decisiones siguientes dependen de lo que descubramos acá.
 - *Se comprueba:* **[AUTO]** `salida/perfilado.md` se genera con consultas SQL y trae cifras: archivos por formato y fecha del cambio, duplicados descartados, nulos por columna, OT sin tipo, regla de falla y cantidad de fallas resultante. Contrastable con el dato: `ls drop/lecturas-*.csv | wc -l` da 30 y coincide con lo informado.
-- **[PENDIENTE]** qué cuenta como falla (por ejemplo, las OT sin tipo).
+- **[CERRADO en D-20]** falla = OT cuya descripción contiene una frase de parada o rotura de `config/frases-falla.txt`; el tipo no se usa. Ejemplos: "Disparo… equipo detenido" (sin tipo) es falla; "Revisión de cableado. Sin falla." no lo es.
 
 **R4. Ingesta que unifica formatos y no inventa señales**
 - *Por qué importa:* si el sistema nuevo cambió de unidad o de zona horaria, no hay error, pero salen falsas alarmas masivas.
