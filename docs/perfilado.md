@@ -732,7 +732,7 @@ Nada de esto está decidido; son mis recomendaciones para que las revises. Al co
 | H-03 | Qué fila queda de cada par conflictivo | La de **mayor vibración** (determinista, conservadora, sin inventar) |
 | H-04 | Conversión de °F | **Decidido (D-12):** convertir según `unidad_temp` y fallar si la unidad no es `C` ni `F` |
 | H-06 | Equipos extraños | **Lista blanca**: solo IDs del maestro; reportar lo descartado |
-| H-07 | Desfase de 3 h | **No corregir**, dejarlo configurable, y **preguntar** al cliente |
+| H-07 | Desfase de 3 h | **Decidido (D-13):** no corregir; desfase configurable (0 por defecto); pregunta enviada al cliente, respuesta pendiente |
 | H-08 | Huecos | **No imputar**; avisar "sin telemetría reciente" |
 | H-09 | Tolerancia de R4(c) | Sobre la **mediana entre equipos** (±1 %), y **reportar** los equipos que cambian más |
 | H-10 | Sensores sospechosos | **Detectarlos** y tratarlos como motivo de revisión propio |
