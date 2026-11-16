@@ -1,0 +1,32 @@
+# Parámetros del backtest (D-26 a D-28). Fijados ANTES de ver resultados: no se ajustan después.
+
+[normal]
+dias_ventana = 7        # el normal es la mediana de los últimos 7 días previos al día evaluado
+dias_minimos = 1        # con menos de 1 día de lecturas desde la última OT, el equipo no se evalúa ese día
+
+[evaluacion]
+horizonte_dias = 7          # una falla cuenta como "dentro" de un episodio si ocurre hasta 7 días después de su inicio
+anticipacion_minima_dias = 2  # D-08: la métrica principal exige al menos 2 días de anticipación
+
+# Regla propia: alerta si una variable supera k veces su normal durante `lecturas` lecturas seguidas (15 min c/u).
+# Se reportan todas; la principal es la primera, elegida de antemano.
+[[combinaciones]]
+id = "P1"
+k = 1.3
+lecturas = 4
+principal = true
+
+[[combinaciones]]
+id = "P2"
+k = 1.2
+lecturas = 4
+
+[[combinaciones]]
+id = "P3"
+k = 1.5
+lecturas = 4
+
+[[combinaciones]]
+id = "P4"
+k = 1.3
+lecturas = 8
