@@ -80,3 +80,10 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Qué descarté y por qué:** la primera fila (depende del orden de lectura y no es robusta); el promedio (inventa un valor que no está en el dato crudo, lo que R4 prohíbe); la de menor vibración (podría ocultar un pico real).
 - **Consecuencia:** el criterio es determinista (dos corridas dan el mismo resultado, R1) y conservador: ante la duda no oculta una señal. Introduce un sesgo hacia arriba de hasta 0,051 mm/s, menos del 2 % del umbral más bajo (2,8 mm/s en turbinas).
 - **Evidencia:** `docs/perfilado.md`, H-03.
+
+## D-11 · Equipos desconocidos: se conservan solo los IDs del maestro y se reporta lo descartado
+- **Contexto:** las lecturas incluyen un ID que no está en `equipos.csv`: `EQ-TEST-01` (48 filas, una por hora, 20/02 00:00 a 21/02 23:00, solo en el formato nuevo). Sus lecturas marcadas °C van de 3,7 a 149,7, un rango que ningún equipo real tiene (sin él, el máximo del mes es 95,8 °C). Parece una prueba de instalación del sistema nuevo.
+- **Qué decidí:** quedarse solo con lecturas cuyo equipo figure en el maestro (lista blanca). Las filas descartadas por esta regla se cuentan, se reportan en el perfilado generado por el pipeline y entran en el cuadre de R4(a) como "inválidas descartadas".
+- **Qué descarté y por qué:** excluir por nombre (`<> 'EQ-TEST-01'`): si el mes que viene aparece otro ID de prueba, entraría sin aviso. Excluir por temperatura mayor a 100 °C: el 100 es un número redondo sin respaldo (ver H-06), y el máximo real del mes (95,8 °C) queda muy cerca.
+- **Consecuencia:** la regla sirve para cualquier drop futuro. Si llega un equipo legítimo que falta en el maestro, se descarta, pero queda a la vista en el reporte para que alguien lo note y actualice el maestro.
+- **Evidencia:** `docs/perfilado.md`, H-06. Cuadre: 115.065 filas crudas = 114.788 limpias + 229 duplicados + 48 de `EQ-TEST-01`. Pregunta abierta al cliente: confirmar que `EQ-TEST-01` es un equipo de prueba.
