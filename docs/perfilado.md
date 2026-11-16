@@ -743,7 +743,7 @@ Nada de esto está decidido; son mis recomendaciones para que las revises. Al co
 | H-13 | IDs de OT que no cruzan | **Decidido (D-17):** normalizar siempre; descartar y reportar los que sigan sin cruzar |
 | H-14 | Tipos de OT | **Decidido (D-18):** mapear sinónimos (61 preventivas, 5 correctivas, 20 sin tipo) y no usar el tipo solo para decidir fallas |
 | H-15 | Cortes del backtest | **Decidido (D-19):** evaluar solo los cortes hasta el 23/02; la lista final se calcula igual, sin evaluación |
-| H-16 | Qué es una falla | **Regla sobre la descripción** con frases específicas, revisada cada mes |
+| H-16 | Qué es una falla | **Decidido (D-20):** OT cuya descripción contiene una frase de parada o rotura (lista configurable); el tipo no se usa |
 
 ## Preguntas abiertas para el cliente
 - ¿El sistema nuevo guarda UTC o hora local? (H-07)
