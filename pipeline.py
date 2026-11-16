@@ -159,11 +159,13 @@ def main():
     print(f"\nOK: {len(plan)} pasos y tests de la limpieza.")
     con.close()  # backtest y lista abren limpieza.duckdb en solo lectura
 
-    import backtest, lista  # acá y no arriba: ambos importan este módulo
+    import backtest, dashboard, lista  # acá y no arriba: importan este módulo
     print("\n== Backtest ==")
     backtest.main()
     print("\n== Lista de cierre ==")
     lista.main()
+    print("\n== Dashboard ==")
+    dashboard.main()
 
 
 if __name__ == "__main__":

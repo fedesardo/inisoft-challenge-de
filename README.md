@@ -18,5 +18,6 @@ Cada corrida regenera todo `salida/` desde cero (limpieza, backtest y lista de c
 - `lista.csv`: equipos con un episodio de alerta activo en los últimos 3 días de datos, del que más se aparta de su normal al que menos, cada uno con su razón en palabras simples.
 - `sobre-umbral.csv`: sección aparte, regla complementaria SU: equipos con la mediana diaria de vibración sobre el umbral del fabricante 2 o más días seguidos, activa en los últimos 3 días, con su razón.
 - `sin-datos.csv`: equipos sin lecturas en las últimas 24 h antes del cierre. No son alertas: no hay con qué evaluarlos.
+- `dashboard.html`: las tres listas con su etiqueta de evidencia, P1 contra el umbral del fabricante en conteos y un gráfico por equipo (vibración, normal y umbral). Abre sin internet; las cifras salen de los CSV de esta carpeta.
 - `backtest.md`, `backtest.csv`, `backtest-fallas.csv`, `backtest-episodios.csv`: la evidencia de que el criterio es confiable.
 - `corridas.csv`, `auditoria.csv`, `descartes.csv`, `*.parquet`: bitácora y datos limpios.
