@@ -11,3 +11,5 @@ Objetivo: qué equipos mandar a mantenimiento esta semana, con evidencia (backte
 - El pipeline no llama a ningún LLM ni a servicios externos: corre offline con un solo comando.
 - Trabajamos por pasos y cada paso se cierra con un commit.
 - Errores de la IA → `AI-LOG.md`. Decisiones con su evidencia → `DECISIONES.md`.
+
+- No des cifras sin medirlas. Si cambiás algo que aprobé, avisá antes de guardar.
