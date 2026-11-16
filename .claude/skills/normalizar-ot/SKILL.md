@@ -32,7 +32,7 @@ Con el drop de febrero da exactamente 5 fallas (EQ-107, 214, 116, 112, 209).
 - Límites conocidos: una parada planificada que use una frase de la lista sería falso positivo; una falla que no detiene el equipo queda fuera.
 
 ## Procesar un drop nuevo
-1. Correr `make run DROP=<carpeta>`; la carpeta no se modifica.
+1. Correr `make run DROP=<carpeta>`; la carpeta no se modifica. Este paso (05) corre después de los de lecturas: si el pipeline se corta antes por un test de lecturas (encabezado o unidad desconocidos), las OT no se procesan. Resolvelo primero con la skill `leer-lecturas` y volvé a correr.
 2. Mirar la auditoría de OT en la consola (entran = quedan + descartadas) y la tabla `ot_descartadas`.
 3. Si aparece tipo `desconocido`, un ID huérfano o más/menos fallas de lo esperado: frená, mostrale al usuario las OT tal cual y preguntá antes de tocar el SQL o la lista. Registrar el cambio en `DECISIONES.md`.
 4. Listar las OT con `es_falla` para revisión humana (número, equipo, texto).
