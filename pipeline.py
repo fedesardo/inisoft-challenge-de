@@ -82,15 +82,14 @@ def imprimir_auditoria(con):
         "SELECT fuente, concepto, motivo, filas, explicacion FROM auditoria ORDER BY fuente, "
         "CASE concepto WHEN 'entran' THEN 1 WHEN 'salen' THEN 2 WHEN 'quedan' THEN 3 ELSE 4 END, motivo"
     ).fetchall()
-    print("\nAuditoría (detalle en salida/auditoria.csv). ENTRAN = SALEN + QUEDAN; las filas (dato) no entran en la cuenta.")
+    print("\nAuditoría: ENTRAN = SALEN + QUEDAN; (dato) es informativo. Motivos en salida/auditoria.csv")
     actual = None
     for fuente, concepto, motivo, n, explicacion in filas:
         if fuente != actual:
             actual = fuente
             print(f"\n  {fuente.upper()}")
         cantidad = f"{n:,}".replace(",", ".")
-        detalle = f"[{motivo}] {explicacion}" if motivo else explicacion
-        print(f"    {etiquetas[concepto]:<7}{cantidad:>9}  {detalle}")
+        print(f"    {etiquetas[concepto]:<7}{cantidad:>9}  {explicacion}")
 
 
 def main():
