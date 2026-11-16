@@ -1,5 +1,10 @@
 -- Paso 05: órdenes de trabajo. IDs normalizados (D-17) y tipos unificados (D-18).
--- Qué cuenta como falla (D-20) NO se decide acá: es un parámetro del criterio.
+-- Falla (D-20): la descripción contiene alguna frase de config/frases-falla.txt (una por línea).
+-- El tipo no se usa para decidir. Rutas relativas a la raíz del repo (pipeline.py hace chdir).
+CREATE TABLE frases_falla AS
+SELECT trim(unnest(string_split(rtrim(replace(content, chr(13), ''), chr(10)), chr(10)))) AS frase
+FROM read_text('config/frases-falla.txt');
+
 CREATE TABLE ot_staging AS
 SELECT nro_ot,
        equipo AS equipo_crudo,
@@ -14,6 +19,8 @@ SELECT nro_ot,
             ELSE 'desconocido'
        END AS tipo,
        descripcion,
+       EXISTS (SELECT 1 FROM frases_falla f
+               WHERE f.frase <> '' AND contains(lower(coalesce(raw_ot.descripcion, '')), lower(f.frase))) AS es_falla,
        -- Cascada: el primer motivo que aplica (D-17, D-22).
        CASE WHEN TRY_STRPTIME(fecha_apertura, '%d/%m/%Y %H:%M') IS NULL
               OR (nullif(trim(fecha_cierre), '') IS NOT NULL
@@ -27,7 +34,7 @@ FROM raw_ot;
 
 CREATE TABLE ot AS
 SELECT nro_ot, equipo_crudo, equipment_id, fecha_apertura, fecha_cierre,
-       tipo_crudo, tipo, descripcion
+       tipo_crudo, tipo, descripcion, es_falla
 FROM ot_staging
 WHERE motivo_descarte IS NULL;
 
