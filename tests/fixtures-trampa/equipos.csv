@@ -1,0 +1,4 @@
+equipment_id,tipo,planta,umbral_vib_mm_s,umbral_temp_c
+EQ-101,bomba,planta-norte,7.1,85.0
+EQ-102,bomba,planta-norte,7.1,85.0
+EQ-103,turbina,planta-sur,4.5,90.0

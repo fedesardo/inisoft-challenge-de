@@ -1,0 +1,8 @@
+nro_ot,equipo,fecha_apertura,fecha_cierre,tipo,descripcion
+90001,eq-101,07/01/2026 09:00,07/01/2026 10:00,PREV,ronda de rutina
+90002,EQ103,08/01/2026 14:00,08/01/2026 18:00,,Disparo por alta temp. Equipo detenido 4hs
+90003, EQ-102,09/01/2026 10:00,09/01/2026 11:00,Correctivo,Revisión de cableado. Sin falla.
+90004,EQ-101,10/01/2026 03:00,10/01/2026 09:00,CORR,"Rotura de sello, se para la bomba de urgencia"
+90005,EQ-103,11/01/2026 11:00,11/01/2026 13:00,Preventivo,"Vibración alta en ronda, se balancea, equipo sigue en servicio"
+90006,EQ-999,12/01/2026 08:00,12/01/2026 12:00,Correctivo,"Rotura de acople, equipo parado"
+90007,EQ-102,13/01/2026 16:00,13/01/2026 20:00,Emergencia,Equipo detenido por fuga de aceite
