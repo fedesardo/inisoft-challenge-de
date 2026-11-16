@@ -1,0 +1,3 @@
+nro_ot,equipo,fecha_apertura,fecha_cierre,tipo,descripcion
+90001,EQ-102,07/01/2026 09:00,07/01/2026 12:00,Correctivo,cambio de rodamiento
+90002,EQ-103,08/01/2026 10:00,08/01/2026 11:00,Preventivo,ronda de rutina
