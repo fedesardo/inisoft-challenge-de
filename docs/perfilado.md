@@ -86,7 +86,7 @@ CREATE VIEW c AS SELECT filename, viejo, eqid, CAST(ts_txt AS TIMESTAMP) ts,
 | H-05 | Sin nulos ni textos no numéricos; timestamps sin zona | 0 en ambos | Hallazgo negativo, también cuenta |
 | H-06 | Equipo fantasma `EQ-TEST-01` | 48 filas, 2 días | Debe excluirse; no está en el maestro |
 | H-07 | Desfase horario de ~3 h entre sistemas | Pico de temperatura: ~14:30 (viejo) vs ~17:30 (nuevo) | Hipótesis UTC vs local, sin confirmar |
-| H-08 | Huecos de lecturas | 220 faltantes; EQ-110 se calla el 28/02 | Un hueco es información, no un cero |
+| H-08 | Huecos de lecturas | 412 faltantes (de 115.200 esperadas); EQ-110 se calla el 28/02 | Un hueco es información, no un cero |
 | H-09 | Nivel por equipo antes/después del 11/02 | 31 de 40 estables; 9 con cambio | El cambio de sistema NO mueve el nivel |
 | H-10 | Sensores reemplazados (VX-200) leen casi cero | EQ-209 desde 14/02, EQ-118 desde 20/02 | Una señal "perfecta" que es un sensor ciego |
 | H-11 | Maestro: umbrales por tipo, unidades coherentes | 3 tipos, 40 equipos, sin nulos | El umbral no distingue entre equipos del mismo tipo |
@@ -402,7 +402,7 @@ SELECT eqid, ts-gap antes, ts hasta, gap FROM g WHERE gap>INTERVAL 15 MINUTE ORD
 - Segunda: cada equipo debería tener 2.880 lecturas en el mes (30 días × 96). Muestra los que no llegan.
 - Tercera: `lag(ts) OVER (PARTITION BY eqid ORDER BY ts)` es una *función de ventana*: para cada lectura devuelve la **lectura anterior del mismo equipo**. La resta `ts − lag(ts)` es el tiempo entre dos lecturas consecutivas. Si es mayor a 15 minutos, hay un hueco.
 
-**Resultado:** 1.198 combinaciones equipo-día; 7 con huecos; **220 lecturas faltantes**. Hay dos patrones:
+**Resultado:** 1.198 combinaciones equipo-día con alguna fila (de las 1.200 posibles: faltan dos días enteros de EQ-110, el 01/03 y 02/03); 7 con huecos. La primera consulta cuenta **220 lecturas faltantes** dentro de los días que tienen filas; sumando las 192 de esos dos días vacíos, el total es **412** (115.200 esperadas − 114.788 lecturas distintas llegadas). Contraste: `SELECT 40*2880 - count(DISTINCT (eqid, ts)) FROM c;`. Hay dos patrones:
 1. **EQ-110:** tiene 2.628 de 2.880; su último dato es el 28/02 08:45 y no vuelve (faltan 252). Es el motivo de que el 01/03 y 02/03 figuren 39 equipos.
 2. **Cinco equipos** (EQ-107, EQ-112, EQ-116, EQ-209, EQ-214) con **un único hueco de 8 h 15 min** cada uno (32 lecturas): EQ-107 el 09/02, EQ-214 el 16/02, EQ-116 el 19/02, EQ-112 el 22/02, EQ-209 el 27/02. Son los mismos cinco equipos con falla con parada en las OT (H-16), el mismo día.
 
