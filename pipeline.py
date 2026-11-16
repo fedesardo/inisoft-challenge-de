@@ -75,6 +75,24 @@ def guardar_corridas(registros):
         w.writerows(registros)
 
 
+def imprimir_auditoria(con):
+    """Muestra la auditoría agrupada por fuente. Entran = salen + quedan; lo informativo no entra en la cuenta."""
+    etiquetas = {"entran": "ENTRAN", "salen": "SALEN", "quedan": "QUEDAN", "informativo": "(dato)"}
+    filas = con.execute(
+        "SELECT fuente, concepto, motivo, filas, explicacion FROM auditoria ORDER BY fuente, "
+        "CASE concepto WHEN 'entran' THEN 1 WHEN 'salen' THEN 2 WHEN 'quedan' THEN 3 ELSE 4 END, motivo"
+    ).fetchall()
+    print("\nAuditoría (detalle en salida/auditoria.csv). ENTRAN = SALEN + QUEDAN; las filas (dato) no entran en la cuenta.")
+    actual = None
+    for fuente, concepto, motivo, n, explicacion in filas:
+        if fuente != actual:
+            actual = fuente
+            print(f"\n  {fuente.upper()}")
+        cantidad = f"{n:,}".replace(",", ".")
+        detalle = f"[{motivo}] {explicacion}" if motivo else explicacion
+        print(f"    {etiquetas[concepto]:<7}{cantidad:>9}  {detalle}")
+
+
 def main():
     drop = Path(os.environ["DROP_DIR"]).resolve() if os.environ.get("DROP_DIR") else RAIZ / "drop"
     faltan = [n for n in ("equipos.csv", "ordenes-de-trabajo.csv") if not (drop / n).is_file()]
@@ -134,12 +152,7 @@ def main():
         print(f"\nPipeline cortado. {pendientes} pasos no corrieron. Detalle en salida/corridas.csv")
         sys.exit(1)
 
-    print("\nAuditoría (salida/auditoria.csv):")
-    for fuente, concepto, motivo, filas in con.execute(
-            "SELECT * FROM auditoria ORDER BY fuente, "
-            "CASE concepto WHEN 'entran' THEN 1 WHEN 'salen' THEN 2 WHEN 'quedan' THEN 3 ELSE 4 END, motivo"
-    ).fetchall():
-        print(f"  {fuente:9} {concepto:12} {motivo:28} {filas:>8,}".replace(",", "."))
+    imprimir_auditoria(con)
     print(f"\nOK: {len(plan)} pasos y tests. Salidas en salida/")
 
 
