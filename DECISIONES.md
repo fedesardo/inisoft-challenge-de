@@ -2,6 +2,50 @@
 
 Cada decisión con su contexto, la alternativa descartada y la evidencia que la sostiene.
 
+## Índice
+
+- D-01 · `drop/` se versiona en el repo
+- D-02 · `PLAN.md` queda fuera del repo
+- D-03 · Permisos `allow` explícitos en `.claude/settings.json`, sin `git *`
+- D-04 · La lista semanal tiene como máximo 5 equipos
+- D-05 · Backtest con corte diario y lista de 7 días
+- D-06 · El criterio de selección es un conjunto de reglas explicables, no un modelo ML
+- D-07 · Asunción: las fallas tienen un intervalo P-F detectable
+- D-08 · Un acierto exige al menos 2 días de anticipación
+- D-09 · Ingesta: unir los formatos por nombre y fallar si aparece un encabezado desconocido
+- D-10 · Duplicados: de cada par conflictivo se conserva la lectura de mayor vibración
+- D-11 · Equipos desconocidos: se conservan solo los IDs del maestro y se reporta lo descartado
+- D-12 · Temperatura: convertir °F según `unidad_temp` y fallar si la unidad no es C ni F
+- D-13 · Zona horaria: no corregir el desfase; dejarlo configurable
+- D-14 · Huecos de lecturas: no imputar y avisar cuando un equipo se queda sin telemetría
+- D-15 · Tolerancia de R4(c): ±0,5 % sobre la mediana de los cambios entre equipos, y se reportan los equipos que cambian más
+- D-16 · Sensores sospechosos: se detectan y se tratan como motivo de revisión propio
+- D-17 · OT: normalizar siempre los IDs de equipo; descartar y reportar las que sigan sin cruzar
+- D-18 · OT: normalizar los tipos y no usar el tipo, por sí solo, para decidir qué es una falla
+- D-19 · Backtest: solo se evalúan los cortes con 7 días de futuro completo; la lista final se calcula igual, sin evaluación propia
+- D-20 · Qué cuenta como falla: una OT cuya descripción contiene una frase de parada o rotura, de una lista configurable
+- D-21 · Umbral del fabricante: se usa solo como alerta de referencia ingenua en el backtest
+- D-22 · Filas ilegibles: se descartan con motivo y se cuentan, no frenan el pipeline
+- D-23 · Test de temperatura: rango válido de 0 a 120 °C
+- D-24 · Salidas de la limpieza
+- D-25 · Historial de corridas para observabilidad
+- D-26 · Backtest: toda OT reinicia el normal del equipo, con mínimo de 1 día de lecturas
+- D-27 · Se mantiene D-08 como métrica principal del backtest; la de 7 días es complementaria
+- D-28 · Backtest: reglas, episodios y combinaciones, fijados antes de ver resultados
+- D-29 · El acierto de EQ-209 en el backtest es sólido frente al ruido, con tres límites declarados
+- D-30 · Lista de cierre: episodio activo en los últimos 3 días, ordenada por desviación; sin datos aparte
+- D-31 · Regla complementaria SU (sobre umbral), agregada después de ver el caso EQ-115
+- D-32 · EQ-118 se mantiene en la lista: la caída es el cambio de sensor; la alerta es la subida posterior
+- D-33 · "Esta semana" = los 7 días posteriores al último dato (asunción propia, a confirmar con el cliente)
+- D-34 · Chequeo [AUTO] de R8: se precisa qué es "autocontenido" y se define la precisión del dashboard
+- D-35 · Presentación de EQ-118: sin umbral del fabricante y con el eje en veces su nivel habitual
+- D-36 · `make test` corre los tests de limpieza y R8 sobre lo generado; los de backtest y lista quedan dentro de `make run`
+- D-37 · R6 (referencia de 5 equipos al azar) y R7 (ventana P-F) quedan fuera de alcance; límites que mostró la tabla de las 5 fallas
+- D-38 · SPEC reconciliado con lo que el pipeline hace
+- D-39 · Cierre de los pendientes
+- Fuera de alcance
+- Escalado
+
 <!-- Plantilla:
 ## D-NN · Título
 - **Contexto:**
@@ -101,6 +145,7 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Qué descarté y por qué:** restar 3 horas a todo el sistema nuevo. Se apoya en una inferencia sin confirmar y, medido sobre los datos, crearía problemas concretos: 484 pares (equipo, momento) repetidos con el sistema viejo el 10/02 de 21:00 a 23:45, con valores distintos (diferencia promedio de vibración 0,1 mm/s) que habría que resolver con una regla nueva; las últimas 3 horas del mes quedarían sin datos (el último dato pasaría de 02/03 23:45 a 20:45); y 9.572 lecturas (12,5 % del sistema nuevo) cambiarían de día. Si la corrección está equivocada, además, corrompe el dato (viola "no inventa señales", R4).
 - **Consecuencia:** el criterio trabaja con cortes y métricas diarias, así que 3 horas casi no cambian el resultado. Cualquier análisis por hora del día quedaría torcido hasta confirmar la zona horaria del sistema nuevo. Si se confirma, se corrige cambiando una línea de configuración y resolviendo los solapes.
 - **Evidencia:** `docs/perfilado.md`, H-07 y su gráfico `docs/graficos/h07-ciclo-diario.png`; mediciones del efecto de una corrección de −3 h en esta decisión. Estado: el cliente respondió; la zona horaria del sistema nuevo sigue sin confirmarse y se asume sin corregir.
+- **Corrección:** el parámetro de desfase configurable (valor 0 por defecto) que esta decisión dice dejar no existe. Se buscó `desfase`, `offset`, `zona`, `tz`, `horas`, `timezone` e `interval` en `*.py`, `*.toml` y `*.sql`, y no hay ninguno de zona horaria (las coincidencias son `horas_sin_lecturas` y ventanas de tiempo). Corregir el desfase requiere código, no solo cambiar una línea de configuración. El resto de D-13 queda como se escribió.
 
 ## D-14 · Huecos de lecturas: no imputar y avisar cuando un equipo se queda sin telemetría
 - **Contexto:** faltan 412 lecturas de las 115.200 esperadas (40 equipos × 2.880): 220 en días con alguna fila y 192 en los dos días enteros que EQ-110 no reportó. Hay dos patrones: EQ-110 deja de reportar el 28/02 a las 08:45 y no vuelve (252 faltantes, sin OT que lo explique); y cinco equipos (EQ-107, 112, 116, 209, 214) tienen un único hueco de 8 h 15 min (32 lecturas) el mismo día de su falla con parada según las OT. La ausencia de lecturas coincide con equipos parados, así que es información y no ruido.
@@ -148,6 +193,7 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Qué descarté y por qué:** evaluar todos los cortes hasta el último día (los cortes tardíos contarían falsas alarmas y fallas perdidas que no se pueden saber); no calcular la lista final (se pierde justo lo que pidió la jefa: qué equipos mandar esta semana).
 - **Consecuencia:** el resultado del backtest es limpio pero se apoya en menos cortes (23 días). La lista final no tiene evaluación propia: su respaldo es la evidencia de los cortes anteriores. La falla de EQ-209 (27/02) sí se puede evaluar: los cortes del 20/02 al 23/02 la tienen dentro de su ventana y cuentan con futuro completo. Con solo 5 fallas el resultado es evidencia modesta (D-05).
 - **Evidencia:** `docs/perfilado.md`, H-15 y H-16.
+- **Corrección:** la cantidad de cortes de este texto (del 01/02 al 23/02, 23 días) no coincide con lo que mide el backtest: `salida/backtest.md` y D-28 dan 23 días evaluados (del 08/02 al 02/03, porque los primeros 7 días no tienen normal), de los cuales 16 (del 08/02 al 23/02) tienen 7 días de futuro completo y cuentan para las falsas alarmas. El resto de D-19 queda como se escribió.
 
 ## D-20 · Qué cuenta como falla: una OT cuya descripción contiene una frase de parada o rotura, de una lista configurable
 - **Contexto:** el campo `tipo` no alcanza (D-18): con la regla "falla = correctivo" se pierden 2 de las 5 fallas con parada (EQ-214 y EQ-209, con el tipo vacío) y se suma una que no lo es (EQ-120, correctivo con "sin hallazgos"). Leyendo las 86 OT hay 5 fallas con parada: EQ-107 (09/02), EQ-214 (16/02), EQ-116 (19/02), EQ-112 (22/02) y EQ-209 (27/02). EQ-206 (15/02) es una intervención correctiva con el equipo "en servicio" y queda como caso límite fuera de la regla.
@@ -307,3 +353,52 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Qué descarté y por qué:** correr R6 sin fijar antes la definición de "azar" y la semilla (el número dependería de esa elección).
 - **Qué se pierde / límites:** el backtest queda comparado solo contra el umbral del fabricante y contra SU. Sin R7 no hay un rango de anticipación estimado; la tabla de arriba es evidencia de 5 casos, no una estimación. Los cocientes de EQ-209 son aproximados (valores redondeados a 2 decimales).
 - **Consecuencia:** `SPEC.md` marca ambos como fuera de alcance. De los dos puntos del criterio mínimo de R6, la parte de falsas alarmas sí se evalúa (0 de P1 contra 21 del umbral del fabricante, `backtest.md`); la parte de superar al azar no. `salida/backtest.md` sigue diciendo que son "pasos siguientes", porque ese texto lo genera `backtest.py` y no se toca.
+
+## D-38 · SPEC reconciliado con lo que el pipeline hace
+- **Contexto:** el SPEC se escribió antes de ver los datos y de construir el pipeline. Al revisarlo contra `salida/` y el repo, varias promesas no coincidían con lo generado.
+- **Qué prometía y qué hay:**
+  - Carpeta `src/` (R1): no existe; el código está en `*.py`, `sql/` y `tests/`. `grep -rEn "requests|urllib|httpx|anthropic|openai|socket" *.py sql/ tests/ config/` sale vacío.
+  - `salida/perfilado.md` generado (R3): no se genera. Hay `docs/perfilado.md`, hecho a mano con consultas, y `salida/auditoria.csv`, que sí genera el pipeline.
+  - `salida/lista-semanal.csv` con `equipo, puntaje, razon` (R5): el archivo es `salida/lista.csv` con `puesto, equipo, tipo, planta, senal, desde, veces_sobre_normal, valor_actual, normal, razon`. No hay puntaje: el orden es por veces sobre el normal (D-30). Hay además `sobre-umbral.csv` y `sin-datos.csv`.
+  - Test de anti-fuga que compara la lista con y sin datos posteriores al corte (R6): no existe. La garantía es el loop con vistas `fecha < D + 1`, el aborto de `backtest.py` si una regla lee tablas completas y `tests/backtest/normal_sin_futuro.sql` (D-28).
+  - `salida/ventana-pf.csv` (R7): no existe, fuera de alcance (D-37).
+  - `salida/DICCIONARIO.md` y su test (R11): no existen.
+  - "Todos los [AUTO] corren dentro de `make run`": no. Algunos nunca tuvieron test (ver más abajo).
+- **Qué decidí:** reescribir el SPEC con nombres, columnas y rutas reales; separar [AUTO] de [MANUAL] según haya o no test (R1, R2, R9 y R10 pasaron a [MANUAL] porque ningún test los cubre; no se aflojó ningún requisito, y R2 sigue protegido por el deny de `.claude/settings.json` y el `chmod`, D-03); marcar R11 como fuera de alcance; reescribir "Verificación final" con lo que se verifica hoy y listar lo no automatizado. No se tocó ninguna regla, ningún cálculo ni `salida/`.
+- **Qué descarté y por qué:** dejar el SPEC como estaba (afirma verificaciones que no existen y quien lo lea las daría por hechas); cambiar el pipeline para que cumpla lo prometido (esta reconciliación no toca reglas, cálculo ni `salida/`).
+- **Qué quedó sin automatizar:** R1 (clon limpio, `shasum` de dos corridas, `grep` sin red), R2 (`git diff` de `drop/`), R3 (`docs/perfilado.md`), R4(c) (D-15), R9 (comandos del README en un clon limpio y la sección Escalado), R10 (formato de `SKILL.md` y prueba con un agente nuevo) y R11. Quedan también sin construir R7 y la referencia al azar de R6 (D-37).
+- **Consecuencia:** el SPEC describe lo que hay. Quien verifique la entrega sabe qué comprueba un test y qué hay que hacer a mano.
+- **Evidencia:** `ls salida/` (sin `DICCIONARIO.md`, `perfilado.md` ni `ventana-pf.csv`); cabecera de `salida/lista.csv`; `ls tests/` y `tests/backtest/` (sin test de equivalencia); `grep` anterior; `git diff --exit-code 81956cb HEAD -- drop/` sin diferencias. Error de proceso registrado en `AI-LOG.md`.
+
+## D-39 · Cierre de los pendientes
+- **R4(c) tolerancia:** ±0,5 % sobre la mediana de los cambios entre equipos (D-15). El test no está implementado: riesgo aceptado en D-15.
+- **R6 meta numérica de precisión y recall:** no se fija. Con 5 fallas (D-20), cualquier meta fijada después de ver el resultado sería arbitraria. Criterio mínimo: menos falsas alarmas que la alerta ingenua, 0 de P1 contra 21 del umbral del fabricante en 16 días con futuro completo (`salida/backtest.csv`, `salida/backtest.md`). La parte "superar al azar" no se evalúa (D-37).
+- **R10 drop de prueba:** `tests/fixtures/` (los dos formatos de lecturas conocidos y 5 OT inventadas) y `tests/fixtures-trampa/` (7 OT con un equipo fuera del maestro y un tipo desconocido). Ninguno prueba un formato de lecturas nuevo: sus encabezados son los dos del drop real. Pruebas con un agente nuevo registradas en `AI-LOG.md`.
+- **D-14, tiempo de silencio:** cerrado en D-30, 24 h sin lecturas (`config/lista.toml`, `horas_sin_lecturas`); el mayor hueco de los demás equipos es de 8 h 15 min.
+- **D-16, regla de sensor sospechoso:** abierto. Los tres pendientes de D-16 siguen sin cerrar (regla de detección, valor congelado de EQ-219, cabida en la lista de 5). Se maneja con una nota en la tarjeta de EQ-118 (D-35, `config/notas-equipo.toml`).
+- **D-13, zona horaria:** abierto, a confirmar con el cliente. El dato no se corrige. El parámetro de desfase que D-13 decía dejar configurable no existe; corregir el desfase requiere código (ver la corrección al final de D-13).
+- **D-04, tope de 5:** cerrado. Las fallas del mes son 5 (D-20); la lista de cierre tiene 1 equipo (`salida/lista.csv`) y P1 tuvo 5 episodios en 5 equipos (`salida/backtest.md`).
+- **D-05, cortes diarios:** cerrado. 23 días evaluados (08/02 al 02/03), 16 con 7 días de futuro completo, 5 fallas (`salida/backtest.md`; D-19, corrección).
+- **D-06, reglas explicables:** cerrado. La regla es k × normal durante N lecturas seguidas, sin pesos: P1 es 1,3 y 4 lecturas (D-28, `config/backtest.toml`). Hay 5 fallas, y sigue valiendo el riesgo de calibrar contra las mismas fallas que se miden.
+- **D-07, intervalo P-F:** cerrado con límite. 4 de las 5 fallas muestran señal previa y EQ-116 no (D-37; D-20, límite 4). No se estimó un rango de anticipación (R7 fuera de alcance).
+
+## Fuera de alcance
+- **Agente analista y R11 (`DICCIONARIO.md` con su test):** lo obligatorio va primero; no existe nada preparado (D-38).
+- **Modelo de machine learning:** con 5 fallas sobreajusta y no explica sus decisiones (D-06).
+- **Datos en tiempo real, alertas push y despliegue en cloud:** el enunciado excluye cuentas cloud; se tratan en Escalado.
+- **Referencia de 5 equipos al azar (R6):** el resultado depende de cómo se defina "azar" y con 5 fallas es muy variable (D-37).
+- **Ventana P-F (R7):** prioridad y tiempo; no es inviable, 4 de las 5 fallas muestran señal previa (D-37).
+- **Regla de sensor sospechoso (D-16):** queda pendiente; la cubren en parte "sin datos" (D-30) y la nota de la tarjeta de EQ-118 (D-35), que no detectan un sensor ciego en general.
+- **Test de R4(c), nivel estable entre sistemas (D-15):** riesgo aceptado; la limpieza se entregó sin él y un drop de un solo formato no tiene "antes" y "después" para comparar.
+
+## Escalado
+
+### Volumen
+
+### Ingesta
+
+### Almacenamiento y cómputo
+
+### Backtest y lista
+
+### Observabilidad
