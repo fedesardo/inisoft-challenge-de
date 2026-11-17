@@ -1,0 +1,5 @@
+# Notas por equipo para el dashboard, tomadas de DECISIONES.md. Son texto de presentación: no cambian ninguna regla.
+# dashboard.py muestra cada nota solo si ese equipo aparece en alguna de las listas de la corrida.
+
+[notas]
+"EQ-118" = "Límites de este aviso (D-32): hay un solo antecedente, la escala del sensor no está validada y no se descartó una deriva del propio sensor."
