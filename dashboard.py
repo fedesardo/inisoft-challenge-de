@@ -510,7 +510,15 @@ def main():
     con.close()
 
     c = conteos(p)
-    por_semana = round(float(fab.falsas_alarmas_por_semana))
+    # Días con 7 de futuro completo = días de datos − ventana − horizonte: con drops cortos da 0 o negativo.
+    dias_fa = int(p.dias_para_falsas_alarmas)
+    if dias_fa > 0:
+        frase_umbral = f" El umbral del fabricante solo habría dado unas {round(float(fab.falsas_alarmas_por_semana))} por semana."
+        cuenta_fa = f"falsas alarmas contadas sobre {plural(dias_fa, 'día', 'días')}"
+    else:
+        frase_umbral = ""
+        cuenta_fa = (f"las falsas alarmas todavía no se pueden contar: hacen falta al menos "
+                     f"{cfg['normal']['dias_ventana'] + horizonte + 1} días de datos")
     pagina = f"""<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mantenimiento del {semana}</title>
@@ -530,9 +538,9 @@ no una predicción para esa semana.</p>
 <p>Esta prueba vale solo para la acción "Mandar a mantenimiento". El aviso de vibración alta todavía no tiene prueba propia.</p>
 <div class="tarjetas">{tarjeta("Nuestro aviso de mantenimiento", pid, p, "propia", episodios, minimo, horizonte)}{tarjeta("Solo el umbral del fabricante", "FAB", fab, "fab", episodios, minimo, horizonte)}</div>
 <p><b>Por qué importan las falsas alarmas:</b> cada una manda a un técnico a revisar un equipo que estaba bien, y una lista
-que se equivoca seguido se deja de mirar. El umbral del fabricante solo habría dado unas {por_semana} por semana.</p>
+que se equivoca seguido se deja de mirar.{frase_umbral}</p>
 <p class="chica">Cómo se probó: con el historial, día por día y sin mirar el futuro. "Avisada" = con al menos {minimo} días de
-anticipación. Fallas del {periodo}; falsas alarmas contadas sobre {int(p.dias_para_falsas_alarmas)} días.</p>
+anticipación. Fallas del {periodo}; {cuenta_fa}.</p>
 {html_fallas(fallas, pid)}
 
 <h2>Detalle por equipo</h2>
