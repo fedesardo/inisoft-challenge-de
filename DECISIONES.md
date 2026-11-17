@@ -408,11 +408,11 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 
 ### Volumen
 
-Volumen: Hoy son 40 equipos × 4 lecturas por hora = 160 por hora (3.840 por día; unas 115.000 en el mes de febrero). El escenario son 500 equipos × 60 = 30.000 por hora (720.000 por día; unas 21,6 millones por mes). Son 187,5 veces más: ×12,5 por más equipos y ×15 por mayor frecuencia. En total son unas 8 lecturas por segundo, poco para un servidor. El problema probable no es la velocidad de llegada sino cuánto se relee y se recalcula (hipótesis a medir).
+Volumen: Hoy son 40 equipos × 4 lecturas por hora = 160 por hora (3.840 por día; unas 115.000 en el drop actual, del 01/02 al 02/03). El escenario son 500 equipos × 60 = 30.000 por hora (720.000 por día; unas 21,6 millones por mes). Son 187,5 veces más: ×12,5 por más equipos y ×15 por mayor frecuencia. En total son unas 8 lecturas por segundo, poco para un servidor. El problema probable no es la velocidad de llegada sino cuánto se relee y se recalcula (hipótesis a medir).
 
 ### Ingesta
 
-Ingesta: Hoy llega un CSV por día y cada corrida borra salida/ y lo recalcula todo desde cero (D-30). Es lo primero que se rompe: con 187,5 veces más datos, el tiempo de una corrida crece hasta no entrar en el intervalo entre un lote y el siguiente. Cambiaría a procesamiento incremental: guardar los resultados de cada día y calcular solo lo nuevo (el normal de un equipo solo necesita sus últimos 7 días, D-26 y D-28). Lo primero que mediría es el tiempo de una corrida con datos sintéticos escalados de a poco, no los del cliente, y cuánto crece al duplicar el volumen. Hoy una corrida completa tarda menos de 20 segundos; si creciera en proporción serían del orden de una hora (cuenta, no medición).
+Ingesta: Hoy llega un CSV por día y cada corrida borra salida/ y lo recalcula todo desde cero (D-30). Es lo primero que se rompe: con 187,5 veces más datos, el tiempo de una corrida crece hasta no entrar en el intervalo entre un lote y el siguiente. Cambiaría a procesamiento incremental: guardar los resultados de cada día y calcular solo lo nuevo (el normal de un equipo solo necesita sus últimos 7 días, D-26 y D-28). Lo primero que mediría es el tiempo de una corrida con datos sintéticos escalados de a poco, no los del cliente, y cuánto crece al duplicar el volumen. Hoy una corrida completa de `make run`, dashboard incluido, tarda unos 4 segundos; si creciera en proporción serían 4 s × 187,5 ≈ 750 s, unos 12 minutos (cuenta, no medición).
 
 ### Almacenamiento y cómputo
 
