@@ -43,6 +43,7 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - D-37 · R6 (referencia de 5 equipos al azar) y R7 (ventana P-F) quedan fuera de alcance; límites que mostró la tabla de las 5 fallas
 - D-38 · SPEC reconciliado con lo que el pipeline hace
 - D-39 · Cierre de los pendientes
+- D-40 · Límites declarados tras la revisión contra el SPEC
 - Fuera de alcance
 - Escalado
 
@@ -381,6 +382,17 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **D-05, cortes diarios:** cerrado. 23 días evaluados (08/02 al 02/03), 16 con 7 días de futuro completo, 5 fallas (`salida/backtest.md`; D-19, corrección).
 - **D-06, reglas explicables:** cerrado. La regla es k × normal durante N lecturas seguidas, sin pesos: P1 es 1,3 y 4 lecturas (D-28, `config/backtest.toml`). Hay 5 fallas, y sigue valiendo el riesgo de calibrar contra las mismas fallas que se miden.
 - **D-07, intervalo P-F:** cerrado con límite. 4 de las 5 fallas muestran señal previa y EQ-116 no (D-37; D-20, límite 4). No se estimó un rango de anticipación (R7 fuera de alcance).
+
+## D-40 · Límites declarados tras la revisión contra el SPEC
+- **Contexto:** el 17/11 el subagente revisor (solo lectura) comparó el repo contra `SPEC.md`. El fallo del dashboard con otro drop se corrigió (`af14446`, `ad50e7e`; `AI-LOG.md`). Lo que sigue no se corrige ahora y queda declarado.
+- **"0 contra 21" se mide sobre días distintos:** P1 no evalúa a un equipo el día de cada OT ni el siguiente (`sql/backtest/normal.sql:22`, D-26); la regla del fabricante sí. Dos de sus 21 falsas alarmas caen en esos días: EQ-214 el 16/02 (OT 40252) y EQ-118 el 20/02 (OT 40264) (`salida/backtest-episodios.csv`). La cifra de README, D-28, D-37 y D-39 debe leerse con esta salvedad.
+- **`corridas.csv` incompleto frente a D-25:** una corrida queda con 3 `id_corrida` distintos (`pipeline.py`, `backtest.py` y `lista.py` generan cada uno el suyo); el dashboard no escribe fila; solo los pasos de la limpieza quedan como `no_corrio` si la corrida se corta.
+- **El deny de `drop/` solo bloquea `Edit`:** `.claude/settings.json` tiene `Edit(/drop/**)`; `Write` y `Bash` no quedan cubiertos por el deny. La protección restante es el `chmod` de D-03.
+- **El control anti-fuga es una búsqueda de texto:** `backtest.py` aborta si un archivo de reglas contiene `limp.`; una regla que leyera las tablas completas por otra vía (por ejemplo `read_parquet`) lo pasaría.
+- **Reportado por la sesión que corrigió el dashboard, no medido en esta:**
+  - Con un drop de 14 días, el pipeline se corta antes del dashboard: `coma()` hace `int(nan)` porque `falsas_alarmas_por_semana` da 0/0 (`backtest.py:50`, la línea de `coma()` con `int(x)`). Reportado, no reproducido.
+  - Con `tests/fixtures`, el dashboard dice "avisó 0 de 0 fallas" y "el aviso no vio venir 0 de las 0".
+  - "Fallas del {periodo}" toma el mínimo y el máximo de todas las fallas, incluidas las no evaluadas.
 
 ## Fuera de alcance
 - **Agente analista y R11 (`DICCIONARIO.md` con su test):** lo obligatorio va primero; no existe nada preparado (D-38).

@@ -54,7 +54,7 @@
 
 **R9. Documentación de entrega**
 - *Por qué importa:* el evaluador valora el razonamiento y cómo se verificó, no solo el código.
-- *Se comprueba:* **[MANUAL]** los comandos del README, copiados y pegados en un clon limpio, funcionan. `DECISIONES.md` tiene la sección "Escalado" con el cálculo: 500 equipos × 1.440 lecturas/día = 720.000/día, contra 40 × 96 = 3.840 hoy (×187,5). La sección la escribe el autor y hoy tiene solo los títulos. `AI-LOG.md` tiene al menos una entrada.
+- *Se comprueba:* **[MANUAL]** los comandos del README, copiados y pegados en un clon limpio, funcionan. `DECISIONES.md` tiene la sección "Escalado" con el cálculo: 500 equipos × 1.440 lecturas/día = 720.000/día, contra 40 × 96 = 3.840 hoy (×187,5). La sección la escribe el autor y está completa (5 secciones). `AI-LOG.md` tiene al menos una entrada.
 
 **R10. Dos skills (`leer-lecturas` y `normalizar-ot`); el procesamiento completo es `make run DROP=<carpeta>`**
 - *Por qué importa:* es la prueba del enunciado: con el drop del mes que viene, otra persona lo procesa con un agente usando solo las skills.
