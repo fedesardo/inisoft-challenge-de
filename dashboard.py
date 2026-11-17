@@ -284,6 +284,8 @@ def veredicto(p, fab):
 def aviso(f):
     if f.clase == "sin_aviso":
         return "<span class='no'>No avisó</span>"
+    if f.clase == "fuera_de_evaluacion":
+        return "<span class='no'>No evaluada (fuera del período de la prueba)</span>"
     d = int(f.anticipacion_dias)
     if f.clase == "anticipada_2d":
         return f"<span class='si'>✓ Avisó {d} días antes</span>"
