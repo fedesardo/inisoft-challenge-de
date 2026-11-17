@@ -37,13 +37,13 @@
 - *Se comprueba:* **[AUTO]**
   - *Anti-fuga:* para cada corte, la lista calculada con todos los datos es idéntica a la calculada con los datos recortados a antes del corte.
   - *Acierto:* falla de OT entre 2 y 7 días después del corte.
-  - *Referencias:* 5 equipos al azar y una alerta ingenua por umbral del fabricante, que imita al sistema que apagaron.
+  - *Referencias:* una alerta ingenua por umbral del fabricante, que imita al sistema que apagaron. La referencia de 5 equipos al azar queda fuera de alcance (D-37).
   - *Fatiga:* se mide equipos marcados y falsas alarmas por semana en las tres.
   - *Criterio mínimo (propuesta a confirmar):* superar al azar y generar menos falsas alarmas que la alerta ingenua.
 - **[PENDIENTE]** la meta numérica de precisión y recall.
 - *Limitación declarada:* con un mes de datos no hay un tramo reservado para validar de verdad. Los parámetros van en un archivo versionado y la limitación va escrita en el README.
 
-**R7. Ventana de anticipación (intervalo P-F) estimada con datos**
+**R7. Ventana de anticipación (intervalo P-F) estimada con datos [FUERA DE ALCANCE, D-37]**
 - *Por qué importa:* dice cuánto tiempo hay para actuar. Si es de horas, una lista semanal no sirve para esas fallas.
 - *Se comprueba:* **[AUTO]** `salida/ventana-pf.csv` con una fila por falla (equipo, fecha de la OT, primer día con señal anormal, días de diferencia). El rango del informe sale de esa tabla. Si hay menos de 3 fallas con señal (umbral propuesto), el informe dice "no estimable" en vez de dar un número.
 
@@ -85,9 +85,11 @@
 - Agente analista: queda preparado (R11) y no se entrega. Lo obligatorio va primero.
 - Modelo de machine learning: con pocas fallas sobreajusta y no explica sus decisiones (D-06).
 - Datos en tiempo real, alertas push y despliegue en cloud: van en la sección de escalado.
+- Referencia de 5 equipos al azar (parte de R6): el resultado depende de cómo se defina "azar" y con 5 fallas es muy variable; haría falta fijar definición y semilla antes de correr (D-37).
+- Ventana P-F (R7): por prioridad y tiempo, lo obligatorio va primero; no es inviable, 4 de las 5 fallas muestran señal previa y quedó sin formalizar (D-37).
 
 ## Verificación final
-1. `make run && make test` en un clon limpio pasa (R1 a R9, R11). El que verifica todo es `make run`; `make test` solo repite los tests de limpieza y R8 sobre lo generado (D-36).
+1. `make run && make test` en un clon limpio pasa (R1 a R9 y R11, salvo R7 y la referencia al azar de R6, D-37). El que verifica todo es `make run`; `make test` solo repite los tests de limpieza y R8 sobre lo generado (D-36).
 2. Revisión manual del dashboard con las 3 preguntas (R8).
 3. Prueba de un agente nuevo con solo las skills sobre un drop de prueba, registrada en AI-LOG (R10).
 4. Todo ítem [PENDIENTE] tiene su valor cerrado y registrado en `DECISIONES.md`.
