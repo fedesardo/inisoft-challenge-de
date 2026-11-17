@@ -5,13 +5,14 @@
 2. Demostrar con un backtest diario, sin fuga de información, que el criterio habría anticipado las fallas del mes sin llenar de falsas alarmas.
 3. Entregarlo con un comando, un dashboard para la jefa y skills para que otra persona procese el mes siguiente.
 
-**Cómo leer los requisitos:** cada uno dice *por qué importa* y *cómo se comprueba*. Etiquetas: **[AUTO]** lo verifica `make test`; **[MANUAL]** lo revisa una persona; **[PENDIENTE]** se define tras mirar los datos (PENDIENTE TRAS PERFILADO).
+**Cómo leer los requisitos:** cada uno dice *por qué importa* y *cómo se comprueba*. Etiquetas: **[AUTO]** lo verifica un test automático: todos corren dentro de `make run`, y `make test` repite una parte sin regenerar (qué cubre cada uno: R1 y D-36); **[MANUAL]** lo revisa una persona; **[PENDIENTE]** se define tras mirar los datos (PENDIENTE TRAS PERFILADO).
 
 ## Requisitos
 
 **R1. Un comando corre todo, offline y con resultado repetible**
 - *Por qué importa:* el enunciado exige un solo comando. Y si dos corridas dan listas distintas, nadie puede confiar en la lista.
 - *Se comprueba:* **[AUTO]** en un clon limpio (`git clone` + `uv sync` + `make run`) termina con código 0 y existen todos los archivos de salida. `grep -rEn "requests|urllib|httpx|anthropic|openai|socket" src/` sale vacío. Dos corridas seguidas dan el mismo `shasum` en `lista-semanal.csv`.
+- *Qué verifica cada comando (D-36):* `make run` corre todos los tests (limpieza, backtest, lista y R8) y se corta con código distinto de 0 si alguno falla (los tests SQL, si devuelven filas; `r8.py`, con código 1). `make test` vuelve a correr, sobre lo ya generado y sin regenerar nada, los 8 tests de limpieza y el chequeo R8; no cubre los de backtest ni los de lista. Si falta `salida/`, falla y pide correr `make run` primero.
 
 **R2. `drop/` no se modifica**
 - *Por qué importa:* son los datos crudos del cliente; si cambian, toda la evidencia pierde valor.
@@ -48,7 +49,7 @@
 
 **R8. Dashboard para la jefa**
 - *Por qué importa:* una jefa de mantenimiento no lee CSV; tiene que entender la lista en un minuto.
-- *Se comprueba:* **[AUTO]** `salida/dashboard.html` es autocontenido (sin `src="http` ni `href="http`), contiene cada equipo de la lista, y su precisión y recall son idénticos a `backtest.csv`.
+- *Se comprueba:* **[AUTO]** (`tests/dashboard/r8.py`) `salida/dashboard.html` es autocontenido: ninguna etiqueta descarga un recurso de la red (`<script src="http`, `<link href="http`, `src="http` en imágenes o iframes) ni lo hace el CSS (`url(http`, `@import`). Los enlaces de texto dentro de plotly.js embebido no cuentan: no descargan nada (D-34). Contiene cada equipo de la lista, y su precisión y recall son idénticos a `backtest.csv`. El recall es una columna de `backtest.csv`; la precisión no tiene columna y se deriva de sus conteos: avisos acertados sobre avisos ya juzgables, donde acierto = falla dentro de los 7 días, incluso el mismo día (definición en D-34, complementaria a D-08 y D-27).
 - **[MANUAL]** se responden "¿qué equipos?", "¿por qué?" y "¿puedo creerle?" en menos de un minuto.
 
 **R9. Documentación de entrega**
@@ -77,6 +78,7 @@
 - Antes de cada falla hay señal detectable en vibración o temperatura (D-07).
 - Los duplicados vienen solo del sistema viejo, como dice el cliente (a verificar en R4).
 - Un acierto exige al menos 2 días de anticipación, a confirmar con el cliente (D-08).
+- "Esta semana" son los 7 días posteriores al último dato, a confirmar con el cliente (D-33).
 - Con pocas fallas, el backtest es evidencia modesta y los cortes diarios se solapan (D-05).
 
 ## Fuera de alcance
@@ -85,7 +87,7 @@
 - Datos en tiempo real, alertas push y despliegue en cloud: van en la sección de escalado.
 
 ## Verificación final
-1. `make run && make test` en un clon limpio pasa (R1 a R9, R11).
+1. `make run && make test` en un clon limpio pasa (R1 a R9, R11). El que verifica todo es `make run`; `make test` solo repite los tests de limpieza y R8 sobre lo generado (D-36).
 2. Revisión manual del dashboard con las 3 preguntas (R8).
 3. Prueba de un agente nuevo con solo las skills sobre un drop de prueba, registrada en AI-LOG (R10).
 4. Todo ítem [PENDIENTE] tiene su valor cerrado y registrado en `DECISIONES.md`.
