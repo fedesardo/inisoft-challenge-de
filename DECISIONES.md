@@ -389,16 +389,27 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Referencia de 5 equipos al azar (R6):** el resultado depende de cómo se defina "azar" y con 5 fallas es muy variable (D-37).
 - **Ventana P-F (R7):** prioridad y tiempo; no es inviable, 4 de las 5 fallas muestran señal previa (D-37).
 - **Regla de sensor sospechoso (D-16):** queda pendiente; la cubren en parte "sin datos" (D-30) y la nota de la tarjeta de EQ-118 (D-35), que no detectan un sensor ciego en general.
-- **Test de R4(c), nivel estable entre sistemas (D-15):** riesgo aceptado; la limpieza se entregó sin él y un drop de un solo formato no tiene "antes" y "después" para comparar.
+- **Test de R4(c), nivel estable entre sistemas (D-15):** riesgo aceptado, decidido el 16/11 (D-15).
+  - Nota aparte: un drop de un solo formato no tiene "antes" y "después" para comparar.
 
 ## Escalado
 
 ### Volumen
 
+Volumen: Hoy son 40 equipos × 4 lecturas por hora = 160 por hora (3.840 por día; unas 115.000 en el mes de febrero). El escenario son 500 equipos × 60 = 30.000 por hora (720.000 por día; unas 21,6 millones por mes). Son 187,5 veces más: ×12,5 por más equipos y ×15 por mayor frecuencia. En total son unas 8 lecturas por segundo, poco para un servidor. El problema probable no es la velocidad de llegada sino cuánto se relee y se recalcula (hipótesis a medir).
+
 ### Ingesta
+
+Ingesta: Hoy llega un CSV por día y cada corrida borra salida/ y lo recalcula todo desde cero (D-30). Es lo primero que se rompe: con 187,5 veces más datos, el tiempo de una corrida crece hasta no entrar en el intervalo entre un lote y el siguiente. Cambiaría a procesamiento incremental: guardar los resultados de cada día y calcular solo lo nuevo (el normal de un equipo solo necesita sus últimos 7 días, D-26 y D-28). Lo primero que mediría es el tiempo de una corrida con datos sintéticos escalados de a poco, no los del cliente, y cuánto crece al duplicar el volumen. Hoy una corrida completa tarda menos de 20 segundos; si creciera en proporción serían del orden de una hora (cuenta, no medición).
 
 ### Almacenamiento y cómputo
 
+Almacenamiento y cómputo: La restricción es on-prem, sin cloud. Hoy los datos crudos se versionan en git (D-01); con unos 21,6 millones de filas por mes eso deja de ser viable, y git quedaría para código, configuración y decisiones. Cambiaría a: crudos en el almacenamiento del servidor, un directorio por fecha; datos limpios en Parquet particionado por día; consultas con DuckDB (hipótesis a medir: un solo servidor alcanza). Solo si, aun con procesamiento incremental, el tiempo no entra en el intervalo entre corridas o los datos no caben en un servidor, pensaría en procesamiento distribuido (por ejemplo PySpark), sabiendo que on-prem implica operar un clúster propio.
+
 ### Backtest y lista
 
+Backtest y lista: Las reglas están pensadas para una lectura cada 15 minutos: 4 lecturas seguidas son 60 minutos hoy y 4 minutos con una lectura por minuto, lo que las haría mucho más sensibles a picos aislados. Pasaría el parámetro a minutos (60) en vez de cantidad de lecturas y recalibraría con los datos nuevos. Lo mismo vale para el umbral de 24 h sin datos (D-30). El backtest recorre día por día en Python: debería agregar solo el corte nuevo y no repetir los anteriores. El tope de 5 equipos (D-04) era el 12,5 % de 40; con 500 equipos hay que revisarlo.
+
 ### Observabilidad
+
+Observabilidad: Hoy hay corridas.csv (D-25), la auditoría de filas que entran y salen y un dashboard estático. Con corridas diarias haría falta una alerta si una corrida falla o no llegan datos, la duración de cada corrida en el tiempo y los equipos sin datos (ya existe). El hueco de R4(c) (D-15) deja de ser un riesgo aceptado menor: con corridas automáticas, un cambio de escala o unidad terminaría con código 0 y una lista torcida sin que nadie mire. Haría falta el test de nivel estable entre sistemas y una línea base del mes anterior.
