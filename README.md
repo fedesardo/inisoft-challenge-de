@@ -28,8 +28,26 @@ uv run python pipeline.py     # sin make
 Regenera todo `salida/` desde cero: limpieza (pasos SQL y sus tests), backtest, lista de cierre y dashboard. Solo se conserva `salida/corridas.csv`, el historial de corridas.
 
 - **Si todo sale bien**, termina con código 0 y la consola muestra la auditoría de filas y no hay ningún `TEST FALLÓ` ni `ERROR`.
-- **Si un test devuelve filas**, la consola muestra `TEST FALLÓ` con las filas que rompen la regla, el pipeline se corta con código 1 y los pasos que no corrieron quedan como `no_corrio` en `salida/corridas.csv`. Un formato de archivo o una unidad de temperatura desconocidos se cortan así.
+- **Si un test devuelve filas**, la consola muestra `TEST FALLÓ` con las filas que rompen la regla, el pipeline se corta con código 1. Si el corte es en la limpieza, los pasos que no corrieron quedan como `no_corrio` en `salida/corridas.csv`; en backtest, lista o dashboard no se registran los pasos pendientes (D-40). Un formato de archivo o una unidad de temperatura desconocidos se cortan así.
 - `make clean` borra `salida/` entera, incluido `corridas.csv`.
+
+## Cómo fluye
+
+```mermaid
+flowchart TD
+    D[("drop/<br>lecturas-*.csv · equipos.csv · ordenes-de-trabajo.csv<br>solo lectura")]
+    D --> L["1 · Limpieza (pipeline.py)<br>sql/01 a 07, cada paso seguido de sus tests/NN_*.sql"]
+    L --> LS[/"limpieza.duckdb · *.parquet<br>auditoria.csv · descartes.csv"/]
+    LS --> B["2 · Backtest (backtest.py)<br>un día de corte a la vez, solo con datos anteriores<br>P1 contra FAB y SU · tests/backtest/"]
+    B --> BS[/"backtest.md · backtest*.csv · backtest.duckdb"/]
+    LS --> C["3 · Lista de cierre (lista.py)<br>sql/lista/ · tests/lista/"]
+    BS --> C
+    C --> CS[/"lista.csv · sobre-umbral.csv · sin-datos.csv"/]
+    CS --> H["4 · Dashboard (dashboard.py)<br>chequeo tests/dashboard/r8.py"]
+    BS --> H
+    H --> HS[/"dashboard.html"/]
+    L & B & C & H -. "un test devuelve filas" .-> X["make run se corta con código 1<br>en la limpieza, los pasos pendientes quedan como no_corrio en corridas.csv"]
+```
 
 ## Procesar un drop nuevo
 
@@ -120,7 +138,7 @@ docs/graficos/   gráficos del perfilado y el script que los genera
 ## Limitaciones
 
 - **Un mes y 5 fallas:** evidencia modesta. Los cortes diarios se solapan y no hay un tramo reservado para validar (D-05, SPEC R6).
-- **SU no está validada:** se definió después de ver el caso EQ-115 y anticipó 0 de 5 fallas (D-31).
+- **SU no tiene evidencia de que anticipe fallas:** la regla y su parámetro (2 días seguidos) se definieron después de ver el caso EQ-115, así que el backtest no la prueba de forma independiente, y en él anticipó 0 de las 5 fallas. Se mantiene en sección aparte porque cubre un punto ciego de P1: una degradación lenta que arrastra su propio normal (D-31).
 - **Un solo antecedente del sensor VX-200 (EQ-209):** la escala de ese sensor no está validada, y EQ-118, el único equipo de la lista de este mes, lo usa (D-29, D-32).
 - **Zona horaria del sistema nuevo sin confirmar:** el dato no se corrige. Corregirla requiere código (D-13).
 - **Regla de sensor sospechoso sin construir** (D-16), y sin test de nivel estable entre sistemas (R4(c), riesgo aceptado en D-15).
