@@ -10,7 +10,7 @@ Este proyecto limpia los datos, decide qué equipos marcar, mide con un backtest
 
 ## Aviso: datos del cliente
 
-`drop/` son los datos crudos del cliente y están versionados para que `make run` funcione en un clon limpio (D-01). El repo es privado y no se puede publicar tal cual. `drop/` es de solo lectura: nada del proyecto lo modifica.
+`drop/` son los datos crudos del cliente y están versionados para que `make run` funcione en un clon limpio (D-01). Son datos del cliente, anonimizados, y se publican con autorización de Inisoft (D-41). `drop/` es de solo lectura: nada del proyecto lo modifica.
 
 ## Requisitos
 

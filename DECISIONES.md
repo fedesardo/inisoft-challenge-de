@@ -44,6 +44,7 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - D-38 · SPEC reconciliado con lo que el pipeline hace
 - D-39 · Cierre de los pendientes
 - D-40 · Límites declarados tras la revisión contra el SPEC
+- D-41 · El repo se publica con `drop/`, autorizado por Mauro porque los datos están anonimizados
 - Fuera de alcance
 - Escalado
 
@@ -62,6 +63,7 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Qué descarté y por qué:** dejar `drop/` fuera del repo y pedir que se descargue aparte. Agrega un paso manual y rompe el "un solo comando".
 - **Consecuencia:** el repo no se puede publicar. Si se hiciera público, habría que sacar `drop/` y reescribir el historial.
 - **Evidencia:** `du -sh drop` = 4.6 MB. `CHALLENGE.md`, sección Restricciones ("Un comando levanta todo").
+- **Nota:** la condición (repo privado) y la consecuencia (no se puede publicar) quedan reemplazadas por D-41.
 
 ## D-02 · `PLAN.md` queda fuera del repo
 - **Contexto:** `PLAN.md` son notas de trabajo personales para organizar el challenge.
@@ -393,6 +395,13 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
   - Con un drop de 14 días, el pipeline se corta antes del dashboard: `coma()` hace `int(nan)` porque `falsas_alarmas_por_semana` da 0/0 (`backtest.py:50`, la línea de `coma()` con `int(x)`). Reportado, no reproducido.
   - Con `tests/fixtures`, el dashboard dice "avisó 0 de 0 fallas" y "el aviso no vio venir 0 de las 0".
   - "Fallas del {periodo}" toma el mínimo y el máximo de todas las fallas, incluidas las no evaluadas.
+
+## D-41 · El repo se publica con `drop/`, autorizado por Mauro porque los datos están anonimizados
+- **Contexto:** D-01 versionó `drop/` con una condición: el repo es privado y se entrega solo al evaluador, porque son datos del cliente; su consecuencia era que el repo no se podía publicar sin sacar `drop/` y reescribir el historial. Mauro (Inisoft) autorizó publicar el repo completo, con `drop/` incluido, porque los datos están anonimizados.
+- **Qué decidí:** publicar el repo completo, con `drop/` y su historial, en mi GitHub personal público. D-41 **reemplaza la condición y la consecuencia de D-01**; la decisión de versionar `drop/` para que `make run` funcione en un clon limpio sigue igual. `drop/` sigue siendo de solo lectura.
+- **Qué descarté y por qué:** sacar `drop/` y reescribir el historial antes de publicar (lo que preveía D-01): rompe el "un solo comando" en un clon limpio y ya no hace falta con la autorización.
+- **Consecuencia:** cualquiera puede clonar el repo y correr `make run` con los datos reales. La anonimización es la que declaró Inisoft; no la verifiqué yo.
+- **Evidencia:** autorización de Mauro por Slack, el 18/11.
 
 ## Fuera de alcance
 - **Agente analista y R11 (`DICCIONARIO.md` con su test):** lo obligatorio va primero; no existe nada preparado (D-38).
