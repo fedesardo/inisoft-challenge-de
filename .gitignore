@@ -6,6 +6,9 @@ __pycache__/
 # Notas de trabajo locales (ver DECISIONES.md D-02)
 PLAN.md
 
+# Configuración local de Claude Code (no se versiona)
+.claude/settings.local.json
+
 # Archivos del sistema y del editor
 .DS_Store
 .vscode/

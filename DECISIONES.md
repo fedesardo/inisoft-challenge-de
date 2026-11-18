@@ -401,8 +401,12 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 - **Referencia de 5 equipos al azar (R6):** el resultado depende de cómo se defina "azar" y con 5 fallas es muy variable (D-37).
 - **Ventana P-F (R7):** prioridad y tiempo; no es inviable, 4 de las 5 fallas muestran señal previa (D-37).
 - **Regla de sensor sospechoso (D-16):** queda pendiente; la cubren en parte "sin datos" (D-30) y la nota de la tarjeta de EQ-118 (D-35), que no detectan un sensor ciego en general.
-- **Test de R4(c), nivel estable entre sistemas (D-15):** riesgo aceptado, decidido el 16/11 (D-15).
+- **Test de R4(c), nivel estable entre sistemas (D-15):** con los datos de hoy no hay problema conocido (la mediana de los cambios queda dentro de ±0,5 %, ver D-15), así que se aceptó el riesgo el 16/11.
   - Nota aparte: un drop de un solo formato no tiene "antes" y "después" para comparar.
+- **Test de equivalencia anti-fuga (lista con y sin datos posteriores al corte, R6):** no se construyó; la garantía es estructural (vistas `fecha < D + 1`, aborto de `backtest.py` y `tests/backtest/normal_sin_futuro.sql`, D-28, D-38), con el límite de que el aborto es una búsqueda de texto (D-40).
+- **Parámetro configurable de zona horaria (D-13, corrección; D-39):** la zona horaria del sistema nuevo sigue sin confirmar y el criterio trabaja con cortes diarios, donde 3 horas casi no cambian el resultado; corregirla requiere código.
+- **Perfilado generado por el pipeline (R3, D-38):** no se genera; el perfilado es `docs/perfilado.md`, hecho a mano con consultas, y el pipeline genera `salida/auditoria.csv`.
+- **Prueba de las skills con un formato de lecturas nuevo (D-39):** no hay un formato nuevo con qué probarlas; los drops de prueba usan los dos encabezados del drop real.
 
 ## Escalado
 

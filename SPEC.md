@@ -87,6 +87,8 @@
 - Datos en tiempo real, alertas push y despliegue en cloud: van en la sección de escalado.
 - Referencia de 5 equipos al azar (parte de R6): el resultado depende de cómo se defina "azar" y con 5 fallas es muy variable; haría falta fijar definición y semilla antes de correr (D-37).
 - Ventana P-F (R7): por prioridad y tiempo, lo obligatorio va primero; no es inviable, 4 de las 5 fallas muestran señal previa y quedó sin formalizar (D-37).
+- Regla de sensor sospechoso (D-16): queda pendiente; la cubren en parte "sin datos" (D-30) y la nota de la tarjeta de EQ-118 (D-35), que no detectan un sensor ciego en general.
+- Test de R4(c), nivel estable entre sistemas (D-15): con los datos de hoy no hay problema conocido (la mediana de los cambios queda dentro de ±0,5 %), así que se aceptó el riesgo (D-15).
 
 ## Verificación final
 1. Lo que se verifica hoy:
