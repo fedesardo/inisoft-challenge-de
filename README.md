@@ -122,6 +122,7 @@ docs/            perfilado.md (hallazgos de los datos), conceptos.md, herramient
 - **Fuera de alcance:** la referencia de 5 equipos al azar, la ventana de anticipación P-F, el agente analista y el diccionario de columnas. Los motivos están en `DECISIONES.md`.
 - **Las skills no se probaron con un formato de lecturas nuevo:** los drops de prueba usan los dos formatos conocidos.
 - **`make test` no verifica backtest ni lista.**
+- **El "0 contra 21" se mide sobre días distintos:** P1 no evalúa a un equipo el día de cada OT ni el siguiente (D-26), y el umbral del fabricante sí. Dos de sus 21 falsas alarmas caen en días que P1 no podía evaluar (D-40).
 
 ## Dónde seguir
 
