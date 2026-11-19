@@ -6,12 +6,12 @@ Loop día por día: para cada día evaluado D se crean vistas con WHERE fecha < 
 (sql/backtest/) solo leen esas vistas. Parámetros en config/backtest.toml. Escribe en salida/.
 Sin red ni LLM.
 """
+import math
 import os
 import sys
 import time
 import tomllib
 from datetime import date, datetime, timedelta
-from pathlib import Path
 
 import duckdb
 
@@ -44,15 +44,13 @@ def fijar(con, **variables):
 
 
 def coma(x, dec=2):
-    """Número con coma decimal; vacío si es None."""
-    if x is None:
+    """Número con coma decimal; "—" si es None o no es finito (NaN, inf)."""
+    if x is None or (isinstance(x, float) and not math.isfinite(x)):
         return "—"
     return f"{x:.{dec}f}".replace(".", ",") if isinstance(x, float) and x != int(x) else str(int(x))
 
 
 def informe(con, cfg, primer_dia, ultimo_dia, fin_datos, n_dias, dias_su):
-    cab = ("regla", "fallas_anticipadas_2d", "fallas_con_episodio_7d", "falsas_alarmas",
-           "falsas_alarmas_por_semana", "anticipacion_mediana_dias_2d")
     res = con.execute("SELECT * FROM bt_resumen ORDER BY orden").fetchall()
     cols = [d[0] for d in con.description]
     filas = [dict(zip(cols, r)) for r in res]
@@ -109,7 +107,7 @@ def informe(con, cfg, primer_dia, ultimo_dia, fin_datos, n_dias, dias_su):
           "- Un episodio que ya estaba en curso antes de los 7 días previos a una falla no cuenta como acierto de esa falla (el inicio queda fuera de la ventana).",
           "- La racha de lecturas seguidas se mide dentro del día evaluado; una racha que cruza la medianoche se corta.",
           "- El inicio del episodio es el corte del primer día con alerta (00:00 del día siguiente), el momento en que ya se conoce; es conservador.",
-          "- Falta la referencia de 5 equipos al azar (R6), la lista semanal (R5) y la ventana P-F (R7): son pasos siguientes."]
+          "- La referencia de 5 equipos al azar (R6) y la ventana P-F (R7) quedan fuera de alcance (D-37)."]
     (SALIDA / "backtest.md").write_text("\n".join(L) + "\n")
 
 

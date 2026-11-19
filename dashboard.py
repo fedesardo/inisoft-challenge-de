@@ -146,6 +146,14 @@ def armar_filas(con, lista, su, sin, p, pid, periodo, notas_equipo):
                     (f"Último día ({dia(ultimo)})", f"{num(f.mediana_ultimo_dia)} mm/s")),
             notas=notas, confianza="Sin evidencia todavía: esta regla se agregó después de ver el caso (D-31)", dato=f, sensor=None))
     for f in sin.head(MAX_TARJETAS).itertuples():
+        if pd.isna(f.ultima_lectura):  # sin ninguna lectura en todo el drop
+            umbral = con.execute("SELECT umbral_vib_mm_s FROM equipos WHERE equipment_id = ?", [f.equipo]).fetchone()[0]
+            filas.append(dict(
+                equipo=f.equipo, tipo=f.tipo, planta=f.planta, clase="sensor", accion="Revisar el sensor", sigla="sin datos",
+                porque="No mandó ninguna lectura en todo el período: no sabemos cómo está.",
+                cambio=(("Antes del corte", "sin lecturas"), ("En todo el período", "sin lecturas")),
+                notas=[], confianza="No es una predicción: es un control del dato", dato=f, sensor=None, previo=None, umbral=umbral))
+            continue
         ultima = pd.Timestamp(f.ultima_lectura)
         previo, umbral = con.execute(
             "SELECT (SELECT median(vib_mm_s) FROM lecturas WHERE equipment_id = ? AND ts > ?::TIMESTAMP - INTERVAL 7 DAY), "
@@ -161,7 +169,7 @@ def armar_filas(con, lista, su, sin, p, pid, periodo, notas_equipo):
     return filas
 
 
-def html_tarjetas(filas, lista, su, sin):
+def html_tarjetas(filas, su, sin):
     bloques = ""
     for f in filas:
         (r1, v1), (r2, v2) = f["cambio"]
@@ -226,9 +234,7 @@ def texto_precision(c, a_tiempo, tarde_dias, minimo, horizonte):
     if juzgables == 0:
         texto = f"Dio {plural(avisos, 'aviso', 'avisos')} y todavía ninguno se puede juzgar."
     elif fa == 0:  # todos los juzgables terminaron en falla
-        if avisos == 1:
-            texto = f"{de_sus} ya se puede juzgar y terminó en falla dentro de los {horizonte} días"
-        elif juzgables == 1:
+        if avisos == 1 or juzgables == 1:
             texto = f"{de_sus} ya se puede juzgar y terminó en falla dentro de los {horizonte} días"
         else:
             texto = f"{de_sus} ya se pueden juzgar y los {juzgables} terminaron en falla dentro de los {horizonte} días"
@@ -413,6 +419,10 @@ def html_detalle(con, filas, cierre, k):
     """Un <details> cerrado por equipo con gráfico; los equipos sin datos van como una línea de texto."""
     bloques, primero = "", True
     for f in filas:
+        if f["clase"] == "sensor" and (f["previo"] is None or pd.isna(f["previo"])):
+            bloques += (f"<p class='sin-grafico'><b>{esc(f['equipo'])}</b>: sin gráfico, no mandó ninguna lectura "
+                        "en todo el período.</p>")
+            continue
         if f["clase"] == "sensor":
             d, bajo = f["dato"], f["previo"] < f["umbral"]
             bloques += (f"<p class='sin-grafico'><b>{esc(f['equipo'])}</b>: sin gráfico, no hay nada que mirar. Vibraba en torno a "
@@ -495,7 +505,8 @@ def main():
     pid, k = principal["id"], principal["k"]
     minimo, horizonte = cfg["evaluacion"]["anticipacion_minima_dias"], cfg["evaluacion"]["horizonte_dias"]
     p, fab = bt.loc[pid], bt.loc["FAB"]
-    periodo = f"{dia(fallas.fecha_falla.min())} al {dia(fallas.fecha_falla.max())}"
+    periodo = (f"{dia(fallas.fecha_falla.min())} al {dia(fallas.fecha_falla.max())}" if fallas.fecha_falla.notna().any()
+               else "período (no hubo fallas)")
 
     con = duckdb.connect(str(SALIDA / "limpieza.duckdb"), read_only=True)
     cierre, total = con.execute("SELECT (SELECT max(ts) FROM lecturas), (SELECT count(*) FROM equipos)").fetchone()
@@ -530,7 +541,7 @@ no una predicción para esa semana.</p>
 {franja}
 
 <h2>Qué hacer del {semana}</h2>
-{html_tarjetas(filas, lista, su, sin)}
+{html_tarjetas(filas, su, sin)}
 
 <h2>¿Se puede confiar en el aviso de mantenimiento?</h2>
 <p class="veredicto"><b>{esc(veredicto(p, fab))}</b></p>

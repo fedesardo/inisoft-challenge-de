@@ -40,6 +40,7 @@ SELECT c.orden, c.combo_id, c.regla, c.k, c.lecturas_seguidas,
        (SELECT count(*) FROM bt_episodios e WHERE e.combo_id = c.combo_id AND e.clase = 'falsa_alarma') AS falsas_alarmas,
        (SELECT count(*) FROM bt_episodios e WHERE e.combo_id = c.combo_id AND e.clase = 'sin_evaluar') AS episodios_sin_evaluar,
        (SELECT n FROM dias) AS dias_para_falsas_alarmas,
+       CASE WHEN (SELECT n FROM dias) > 0 THEN
        round((SELECT count(*) FROM bt_episodios e WHERE e.combo_id = c.combo_id AND e.clase = 'falsa_alarma')
-             / ((SELECT n FROM dias) / 7.0), 2) AS falsas_alarmas_por_semana
+             / ((SELECT n FROM dias) / 7.0), 2) END AS falsas_alarmas_por_semana
 FROM bt_combos c;

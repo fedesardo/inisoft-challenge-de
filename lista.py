@@ -14,7 +14,6 @@ import sys
 import time
 import tomllib
 from datetime import datetime
-from pathlib import Path
 
 import duckdb
 

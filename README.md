@@ -147,7 +147,7 @@ docs/graficos/   gráficos del perfilado y el script que los genera
 - **Fuera de alcance:** el agente analista y el diccionario de columnas (R11), un modelo de machine learning, datos en tiempo real con alertas push y despliegue en cloud, la referencia de 5 equipos al azar, la ventana de anticipación P-F, la regla de sensor sospechoso, el test de nivel estable entre sistemas (R4(c)), el test de equivalencia anti-fuga, el parámetro configurable de zona horaria, el perfilado generado por el pipeline (R3) y la prueba de las skills con un formato de lecturas nuevo. Los motivos están en `DECISIONES.md`.
 - **Las skills no se probaron con un formato de lecturas nuevo:** los drops de prueba usan los dos formatos conocidos.
 - **`make test` no verifica backtest ni lista.**
-- **El "0 contra 21" se mide sobre días distintos:** P1 no evalúa a un equipo el día de cada OT ni el siguiente (D-26), y el umbral del fabricante sí. Dos de sus 21 falsas alarmas caen en días que P1 no podía evaluar (D-40).
+- **El "0 contra 21" se mide sobre días distintos:** P1 no evalúa a un equipo el día de cada OT ni el siguiente (D-26), y el umbral del fabricante sí. Cinco de sus 21 falsas alarmas caen en días que P1 no podía evaluar: sobre los días que las dos reglas evalúan, queda 0 contra 16 (D-40).
 
 ## Dónde seguir
 
