@@ -1,9 +1,11 @@
 -- Caso EQ-209: OT 40262 el 20/02 a las 12:30 y falla el 27/02. Tras esa OT el normal solo puede usar
 -- lecturas posteriores a las 12:30 del 20/02 y anteriores al día evaluado. Solo aplica si el drop
--- trae esa OT.
+-- trae esa OT y lecturas de EQ-209 hasta el 27/02.
 WITH hay_ot AS (
     SELECT 1 FROM limp.ot
     WHERE equipment_id = 'EQ-209' AND fecha_apertura = TIMESTAMP '2026-02-20 12:30:00'
+      -- y el drop cubre los días que el test revisa (con un drop que corta antes, no aplica)
+      AND EXISTS (SELECT 1 FROM limp.lecturas WHERE equipment_id = 'EQ-209' AND ts >= TIMESTAMP '2026-02-27 00:00:00')
 )
 SELECT n.dia, n.equipment_id, 'EQ-209 evaluado el 21/02, con menos de 1 día desde la OT' AS problema
 FROM bt_normales n, hay_ot

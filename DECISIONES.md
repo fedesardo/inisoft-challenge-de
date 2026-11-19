@@ -235,7 +235,7 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
 ## D-25 · Historial de corridas para observabilidad
 - **Contexto:** hace falta saber qué corrió, qué falló y dónde se cortó el pipeline.
 - **Qué decidí:** `salida/corridas.csv` se acumula (no se reescribe) con una fila por paso y por test en cada corrida: `id_corrida, drop_dir, orden, tipo, nombre, estado (ok|fallo|error|no_corrio), filas, duracion_s, mensaje`. Los pasos posteriores a un corte quedan como `no_corrio`.
-- **Qué descarté y por qué:** construir un tablero ahora: con una corrida por mes, una tabla de 14 filas alcanza. Un tablero propio tiene sentido con corridas diarias o con 500 equipos (ver "Escalado"), y se arma sobre este CSV.
+- **Qué descarté y por qué:** construir un tablero ahora: con una corrida por mes, una tabla de unas 15 filas alcanza. Un tablero propio tiene sentido con corridas diarias o con 500 equipos (ver "Escalado"), y se arma sobre este CSV.
 - **Consecuencia:** el historial vive en `salida/`, así que `make clean` lo borra. No avisa solo: alguien tiene que mirarlo.
 - **Evidencia:** `pipeline.py`; probado con drops rotos (unidad `K` y encabezado renombrado cortan en su test; un error interno de deduplicación corta en el cuadre).
 
@@ -355,7 +355,7 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
   - *EQ-112 y EQ-209:* la vibración sube desde el día −4 (1,17× y ~1,4×), coherente con la anticipación de 2 y 3 días de P1.
 - **Qué descarté y por qué:** correr R6 sin fijar antes la definición de "azar" y la semilla (el número dependería de esa elección).
 - **Qué se pierde / límites:** el backtest queda comparado solo contra el umbral del fabricante y contra SU. Sin R7 no hay un rango de anticipación estimado; la tabla de arriba es evidencia de 5 casos, no una estimación. Los cocientes de EQ-209 son aproximados (valores redondeados a 2 decimales).
-- **Consecuencia:** `SPEC.md` marca ambos como fuera de alcance. De los dos puntos del criterio mínimo de R6, la parte de falsas alarmas sí se evalúa (0 de P1 contra 21 del umbral del fabricante, `backtest.md`); la parte de superar al azar no. `salida/backtest.md` sigue diciendo que son "pasos siguientes", porque ese texto lo genera `backtest.py` y no se toca.
+- **Consecuencia:** `SPEC.md` marca ambos como fuera de alcance. De los dos puntos del criterio mínimo de R6, la parte de falsas alarmas sí se evalúa (0 de P1 contra 21 del umbral del fabricante, `backtest.md`); la parte de superar al azar no. `salida/backtest.md` los declara fuera de alcance (D-37); hasta el 18/11 decía "pasos siguientes" y se corrigió en `backtest.py` en la revisión de entrega (D-40).
 
 ## D-38 · SPEC reconciliado con lo que el pipeline hace
 - **Contexto:** el SPEC se escribió antes de ver los datos y de construir el pipeline. Al revisarlo contra `salida/` y el repo, varias promesas no coincidían con lo generado.
@@ -396,6 +396,17 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
   - **Corregido (18/11):** el dashboard se caía con un equipo sin ninguna lectura en el drop (`sin-datos.csv` con fecha vacía) y con un drop sin fallas. Reproducido con drops armados para la prueba y corregido en `dashboard.py`; con `drop/` las salidas no cambian.
   - Con `tests/fixtures`, el dashboard dice "avisó 0 de 0 fallas" y "el aviso no vio venir 0 de las 0".
   - "Fallas del {periodo}" toma el mínimo y el máximo de todas las fallas, incluidas las no evaluadas.
+- **Corregido en la revisión de entrega (18/11), probado con 8 drops** (`drop/`, solo formato viejo, solo formato nuevo, tres recortes del mes y los dos fixtures; con `drop/` los CSV salen idénticos):
+  - Un drop con un solo formato de lecturas cortaba el paso 03 (`Binder Error`: faltaban las columnas del otro formato). Desde el 11/02 el cliente manda solo el formato nuevo, así que el drop del mes que viene lo habría disparado. `sql/01_crudo.sql` agrega vacías las columnas que falten.
+  - `tests/backtest/normal_eq209.sql` cortaba cualquier drop que trajera la OT 40262 (por ejemplo, un export de OT acumulado) sin lecturas hasta el 27/02. Ahora solo aplica si el drop cubre esos días.
+- **Declarados en la revisión de entrega (18/11), no corregidos:** ninguno ocurre con `drop/`; se dejan para no tocar lógica aprobada al cierre.
+  - Un sensor clavado en 0 que vuelve a medir deja un normal 0: `lista.py` (cociente `actual / normal`) se corta con `ZeroDivisionError` y la regla propia alerta con cualquier lectura positiva.
+  - Las frases de falla se buscan como texto dentro de la descripción (`contains`, `sql/05_ot.sql`): "parado" coincide con "reparado" y "se para" con "se parametriza". Corregirlo cambia la definición de falla (D-20).
+  - Las fallas posteriores al último dato cuentan como "sin aviso" en el backtest (`sql/backtest/metricas.sql`); con drops que cortan antes de fin de mes, el recall baja sin que haya datos para evaluarlas.
+  - Con un drop sin días evaluables, `backtest.md` muestra un rango de fechas invertido y días negativos; "Último dato" se calcula como fin del último día menos 15 minutos, no con el `max(ts)` real.
+  - Si un equipo tiene dos episodios en los últimos 3 días, `razon` de `lista.csv` repite la señal.
+  - `dashboard.html` no es idéntico byte a byte entre corridas (ids al azar de plotly); R1 exige el `shasum` igual solo en `lista.csv`.
+  - El `chmod` de D-03 protege `drop/` solo en la máquina local: git no guarda ese permiso.
 
 ## D-41 · El repo se publica con `drop/`, autorizado por Mauro porque los datos están anonimizados
 - **Contexto:** D-01 versionó `drop/` con una condición: el repo es privado y se entrega solo al evaluador, porque son datos del cliente; su consecuencia era que el repo no se podía publicar sin sacar `drop/` y reescribir el historial. Mauro (Inisoft) autorizó publicar el repo completo, con `drop/` incluido, porque los datos están anonimizados.

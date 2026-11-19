@@ -14,6 +14,8 @@ Los archivos `lecturas-*.csv` vienen en dos formatos. Se reconocen **solo por el
 | viejo | `equipment_id,ts,vibracion_mm_s,temperatura_c` | °C (no la declara, se asume) |
 | nuevo | `asset_id,timestamp,vibration_mm_s,temp,unidad_temp` | columna `unidad_temp`: `C` o `F` |
 
+Un drop puede traer un solo formato (desde el 11/02 el cliente manda solo el nuevo): `sql/01_crudo.sql` agrega vacías las columnas del otro, no hay que tocar nada.
+
 Drop mínimo de ejemplo en `tests/fixtures/` (inventado; no son datos del cliente).
 
 ## Reglas
@@ -27,7 +29,7 @@ Drop mínimo de ejemplo en `tests/fixtures/` (inventado; no son datos del client
 No adivinar ni "arreglar" el archivo. El test `tests/01_encabezados_conocidos.sql` o el de
 unidad (`03_unidad_temp_conocida.sql`) corta el pipeline con código 1 y lista los archivos o
 filas culpables. Frená, mostrale al usuario el mensaje tal cual (archivo y encabezado o
-unidad) y preguntá cómo se interpreta. Solo después se agrega el formato al SQL y a su test,
+unidad) y preguntá cómo se interpreta. Solo después se agrega el formato al SQL (columnas en `sql/01_crudo.sql` y `sql/03`) y a su test,
 y se registra en `DECISIONES.md`.
 
 ## Procesar un drop nuevo

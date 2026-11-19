@@ -7,7 +7,7 @@ quedan registrados como `no_corrio`.
   uv run --locked python pipeline.py              # lee drop/
   DROP_DIR=/ruta/a/otro/drop uv run --locked python pipeline.py
 
-Después de la limpieza corre el backtest (backtest.py) y la lista de cierre (lista.py): un solo
+Después de la limpieza corre el backtest (backtest.py), la lista de cierre (lista.py) y el dashboard (dashboard.py): un solo
 comando regenera todo. Empieza borrando salida/ (menos el historial corridas.csv, D-25).
 Lee DROP_DIR en solo lectura. Escribe solo en salida/. Sin red ni LLM.
 """

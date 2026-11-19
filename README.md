@@ -28,7 +28,7 @@ uv run python pipeline.py     # sin make
 Regenera todo `salida/` desde cero: limpieza (pasos SQL y sus tests), backtest, lista de cierre y dashboard. Solo se conserva `salida/corridas.csv`, el historial de corridas.
 
 - **Si todo sale bien**, termina con código 0 y la consola muestra la auditoría de filas y no hay ningún `TEST FALLÓ` ni `ERROR`.
-- **Si un test devuelve filas**, la consola muestra `TEST FALLÓ` con las filas que rompen la regla, el pipeline se corta con código 1. Si el corte es en la limpieza, los pasos que no corrieron quedan como `no_corrio` en `salida/corridas.csv`; en backtest, lista o dashboard no se registran los pasos pendientes (D-40). Un formato de archivo o una unidad de temperatura desconocidos se cortan así.
+- **Si un test devuelve filas**, la consola muestra `TEST FALLÓ` (en la limpieza) o `[fallo]` (en backtest y lista) con las filas que rompen la regla, y el pipeline se corta con código 1. Si el corte es en la limpieza, los pasos que no corrieron quedan como `no_corrio` en `salida/corridas.csv`; en backtest, lista o dashboard no se registran los pasos pendientes (D-40). Un formato de archivo o una unidad de temperatura desconocidos se cortan así.
 - `make clean` borra `salida/` entera, incluido `corridas.csv`.
 
 ## Cómo fluye

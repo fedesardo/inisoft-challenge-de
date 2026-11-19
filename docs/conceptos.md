@@ -1,5 +1,7 @@
 # Guía de conceptos del challenge
 
+> **Nota (18/11):** guía de estudio escrita mientras se tomaban las decisiones. Donde difiera, manda `DECISIONES.md`: la referencia al azar, el test anti-fuga y la ventana P-F (R7) quedaron fuera de alcance (D-37, D-38); el desfase horario no es un parámetro configurable (D-13, corrección); los cortes van del 08/02 al 02/03 (D-19, corrección); la lista es `salida/lista.csv`; R2 se verifica a mano.
+
 Esta guía existe para que puedas leerla de corrido, entender cada pieza del trabajo y explicarla en la charla con el evaluador. Cada concepto trae una definición corta y un ejemplo con **tus datos** (equipos reales de `drop/`). Donde un número es solo un ejemplo para entender el mecanismo, lo dice.
 
 **Cómo ver los diagramas:** están escritos en Mermaid. GitHub los dibuja solo. En VS Code, instalá la extensión *Markdown Preview Mermaid Support* y abrí la vista previa con Cmd+Shift+V.

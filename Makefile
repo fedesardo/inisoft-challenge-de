@@ -3,7 +3,7 @@ DROP ?= drop/
 
 .PHONY: run test clean
 
-# Regenera todo desde cero: limpieza (pasos SQL y tests en orden), backtest y lista de cierre.
+# Regenera todo desde cero: limpieza (pasos SQL y tests en orden), backtest, lista de cierre y dashboard.
 # Se corta si un test devuelve filas. Equivale a: uv run python pipeline.py
 run:
 	DROP_DIR=$(DROP) uv run --locked python pipeline.py

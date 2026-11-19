@@ -6,9 +6,16 @@
 CREATE OR REPLACE MACRO normalizar_id(x) AS
     upper(regexp_replace(trim(x), '^(?i)eq-?', 'EQ-'));
 
+-- Un drop puede traer un solo formato (viejo o nuevo, D-09): las columnas del otro se
+-- agregan vacías para que el paso 03 siempre encuentre las dos.
 CREATE TABLE raw_lecturas AS
 SELECT * FROM read_csv(getvariable('drop_dir') || '/lecturas-*.csv',
-    union_by_name = true, filename = true, all_varchar = true);
+    union_by_name = true, filename = true, all_varchar = true)
+UNION ALL BY NAME
+SELECT NULL::VARCHAR AS equipment_id, NULL::VARCHAR AS ts, NULL::VARCHAR AS vibracion_mm_s,
+       NULL::VARCHAR AS temperatura_c, NULL::VARCHAR AS asset_id, NULL::VARCHAR AS "timestamp",
+       NULL::VARCHAR AS vibration_mm_s, NULL::VARCHAR AS temp, NULL::VARCHAR AS unidad_temp
+WHERE false;
 
 CREATE TABLE raw_equipos AS
 SELECT * FROM read_csv(getvariable('drop_dir') || '/equipos.csv', all_varchar = true);

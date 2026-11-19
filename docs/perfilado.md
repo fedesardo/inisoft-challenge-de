@@ -1,5 +1,7 @@
 # Perfilado de `drop/` (paso 03)
 
+> **Nota (18/11):** foto del perfilado del 16/11. La tabla final de decisiones refleja ese momento; el estado cerrado de cada una está en `DECISIONES.md` (D-39): el silencio quedó en 24 h (D-30), el desfase horario no es configurable (D-13, corrección) y los cortes van del 08/02 al 02/03 (D-19, corrección).
+
 - **Fecha:** 2026-11-16 · **Motor:** DuckDB 2.0.0 · **Fuente:** `drop/` en solo lectura (nada se modificó).
 - **Para quién es este documento:** para sentarse a leerlo de punta a punta y entender qué hay en los datos, por qué cada consulta es como es, qué hay que decidir y qué conviene decidir.
 - **Qué es un perfilado:** el *perfilado de datos* (data profiling) es la inspección sistemática de datos crudos —estructura, calidad, distribución— **antes** de transformarlos. Aquí solo se observa. Las decisiones se toman después y se registran en `DECISIONES.md`, citando el número de hallazgo (H-NN).
