@@ -58,7 +58,7 @@
 
 **R10. Dos skills (`leer-lecturas` y `normalizar-ot`); el procesamiento completo es `make run DROP=<carpeta>`**
 - *Por qué importa:* es la prueba del enunciado: con el drop del mes que viene, otra persona lo procesa con un agente usando solo las skills.
-- *Se comprueba:* **[AUTO]** el pipeline acepta `DROP_DIR=<ruta>` (`make run DROP=<carpeta>`), que corre limpieza, backtest, lista y dashboard. **[MANUAL]** cada `SKILL.md` en `.claude/skills/` tiene `name` y `description` válidos (no hay test). Las skills cubren la limpieza de lecturas y de OT; el resto lo hace ese mismo comando.
+- *Se comprueba:* **[MANUAL]** el pipeline acepta `DROP_DIR=<ruta>` (ningún test corre otro drop; se probó a mano con 25 drops, D-40) con `make run DROP=<carpeta>`, que corre limpieza, backtest, lista y dashboard. **[MANUAL]** cada `SKILL.md` en `.claude/skills/` tiene `name` y `description` válidos (no hay test). Las skills cubren la limpieza de lecturas y de OT; el resto lo hace ese mismo comando.
 - **[MANUAL]** un agente nuevo, sin el contexto de esta conversación, con solo las skills y un drop de prueba, procesa el drop sin ayuda. Se registra en AI-LOG (hecho para las dos skills).
 - **[CERRADO en D-39]** drop de prueba: `tests/fixtures/` (los dos formatos de lecturas ya conocidos y 5 OT inventadas) y `tests/fixtures-trampa/` (7 OT con un equipo fuera del maestro y un tipo desconocido). **Ninguno prueba un formato de lecturas nuevo:** usan los mismos dos encabezados del drop real.
 

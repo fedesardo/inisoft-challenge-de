@@ -396,9 +396,10 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
   - **Corregido (18/11):** el dashboard se caía con un equipo sin ninguna lectura en el drop (`sin-datos.csv` con fecha vacía) y con un drop sin fallas. Reproducido con drops armados para la prueba y corregido en `dashboard.py`; con `drop/` las salidas no cambian.
   - Con `tests/fixtures`, el dashboard dice "avisó 0 de 0 fallas" y "el aviso no vio venir 0 de las 0".
   - "Fallas del {periodo}" toma el mínimo y el máximo de todas las fallas, incluidas las no evaluadas.
-- **Corregido en la revisión de entrega (18/11), probado con 8 drops** (`drop/`, solo formato viejo, solo formato nuevo, tres recortes del mes y los dos fixtures; con `drop/` los CSV salen idénticos):
+- **Corregido en la revisión de entrega (18/11), probado con 25 drops** (`drop/`, solo formato viejo, solo formato nuevo, un "marzo" con fechas corridas con y sin OT acumuladas, recortes de 3 a 25 días, un equipo sin lecturas, un drop sin fallas, los dos fixtures, entre otros): 24 terminan con código 0 y el único que se corta es el del sensor clavado en 0 (declarado abajo). Con `drop/` los CSV salen idénticos.
   - Un drop con un solo formato de lecturas cortaba el paso 03 (`Binder Error`: faltaban las columnas del otro formato). Desde el 11/02 el cliente manda solo el formato nuevo, así que el drop del mes que viene lo habría disparado. `sql/01_crudo.sql` agrega vacías las columnas que falten.
-  - `tests/backtest/normal_eq209.sql` cortaba cualquier drop que trajera la OT 40262 (por ejemplo, un export de OT acumulado) sin lecturas hasta el 27/02. Ahora solo aplica si el drop cubre esos días.
+  - `tests/backtest/normal_eq209.sql` cortaba cualquier drop que trajera la OT 40262 (por ejemplo, un export de OT acumulado) sin lecturas hasta el 27/02. Ahora solo aplica si el drop tiene lecturas de EQ-209 desde antes del 15/02 y hasta el 27/02 (la primera versión del arreglo pedía solo lo segundo, y un drop de marzo con OT acumuladas lo seguía disparando).
+  - `salida/backtest.md` decía que la lista semanal (R5) era un "paso siguiente"; ahora declara la referencia al azar y R7 fuera de alcance (D-37), en el texto que genera `backtest.py`.
 - **Declarados en la revisión de entrega (18/11), no corregidos:** ninguno ocurre con `drop/`; se dejan para no tocar lógica aprobada al cierre.
   - Un sensor clavado en 0 que vuelve a medir deja un normal 0: `lista.py` (cociente `actual / normal`) se corta con `ZeroDivisionError` y la regla propia alerta con cualquier lectura positiva.
   - Las frases de falla se buscan como texto dentro de la descripción (`contains`, `sql/05_ot.sql`): "parado" coincide con "reparado" y "se para" con "se parametriza". Corregirlo cambia la definición de falla (D-20).
@@ -407,6 +408,9 @@ Cada decisión con su contexto, la alternativa descartada y la evidencia que la 
   - Si un equipo tiene dos episodios en los últimos 3 días, `razon` de `lista.csv` repite la señal.
   - `dashboard.html` no es idéntico byte a byte entre corridas (ids al azar de plotly); R1 exige el `shasum` igual solo en `lista.csv`.
   - El `chmod` de D-03 protege `drop/` solo en la máquina local: git no guarda ese permiso.
+  - Una sola lectura con fecha futura (por ejemplo, el reloj de un sensor mal configurado) mueve el cierre: `lista.py`, `backtest.py` y `dashboard.py` toman `max(ts)` sin filtro, y la lista puede quedar vacía con casi todos los equipos en `sin-datos.csv`, con código 0. La limpieza solo descarta timestamps ilegibles, no fuera de rango.
+  - Si cambia el formato de fecha de las OT (por ejemplo, ISO), todas quedan como `fecha_invalida` (`sql/05_ot.sql`) sin cortar el pipeline: el backtest se queda sin fallas y la lista sin reinicios de normal. Solo se ve en `salida/auditoria.csv`. Las lecturas, en cambio, sí frenan ante un encabezado desconocido.
+  - El dashboard muestra las 21 falsas alarmas del umbral del fabricante sin la salvedad de arriba (0 contra 16 sobre días comparables); la salvedad está en el README y aquí.
 
 ## D-41 · El repo se publica con `drop/`, autorizado por Mauro porque los datos están anonimizados
 - **Contexto:** D-01 versionó `drop/` con una condición: el repo es privado y se entrega solo al evaluador, porque son datos del cliente; su consecuencia era que el repo no se podía publicar sin sacar `drop/` y reescribir el historial. Mauro (Inisoft) autorizó publicar el repo completo, con `drop/` incluido, porque los datos están anonimizados.

@@ -4,7 +4,10 @@
 WITH hay_ot AS (
     SELECT 1 FROM limp.ot
     WHERE equipment_id = 'EQ-209' AND fecha_apertura = TIMESTAMP '2026-02-20 12:30:00'
-      -- y el drop cubre los días que el test revisa (con un drop que corta antes, no aplica)
+      -- y el drop cubre los días que el test revisa: lecturas de EQ-209 desde antes del 15/02 (para que
+      -- el 22/02 tenga 7 días de historia y se evalúe) hasta el 27/02. Con un drop de otro período
+      -- o que corta antes (por ejemplo, un export de OT acumulado), el test no aplica.
+      AND EXISTS (SELECT 1 FROM limp.lecturas WHERE equipment_id = 'EQ-209' AND ts < TIMESTAMP '2026-02-15 00:00:00')
       AND EXISTS (SELECT 1 FROM limp.lecturas WHERE equipment_id = 'EQ-209' AND ts >= TIMESTAMP '2026-02-27 00:00:00')
 )
 SELECT n.dia, n.equipment_id, 'EQ-209 evaluado el 21/02, con menos de 1 día desde la OT' AS problema

@@ -36,7 +36,7 @@ y se registra en `DECISIONES.md`.
 1. Verificar la carpeta: debe tener `lecturas-*.csv`, `equipos.csv` y `ordenes-de-trabajo.csv`.
    Mirar el encabezado de cada lectura (`head -1`) y contarlos por formato.
 2. Correr `make run DROP=<carpeta>`. Es de solo lectura sobre el drop; escribe solo en `salida/`.
-3. Revisar los tests: la corrida termina en `OK` o con `TEST FALLÓ` / `ERROR` (código 1). El
+3. Revisar los tests: la corrida termina en `OK` o con `TEST FALLÓ` / `[fallo]` / `ERROR` (código distinto de 0). El
    historial queda en `salida/corridas.csv`.
 4. Resumir qué cambió respecto del drop anterior: archivos por formato, filas que entran,
    salen (por motivo) y quedan, duplicados, filas en °F, y cualquier test que falló.
